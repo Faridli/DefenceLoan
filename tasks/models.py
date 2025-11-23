@@ -1,5 +1,5 @@
 from django.db import models
-
+from datetime import date, time
 # -------------------------------
 # 🔹 All Force 
 # -------------------------------
@@ -46,7 +46,7 @@ class ForceMember(models.Model):
     company = models.CharField(max_length=50, choices=COM_CHOICES, blank=True, null=True)
 
     svc_join = models.DateField()
-    mother_unit = models.CharField(max_length=50)
+    mother_unit = models.CharField(max_length=50, default="Unknown")
     rab_join = models.DateField()
     birth_day = models.DateField()  
 
@@ -127,14 +127,33 @@ class MiRoomVisit(models.Model):
         return f"{self.member.name} - {self.date}"
 
 class Duty(models.Model):
-    member = models.ForeignKey(ForceMember, on_delete=models.CASCADE, related_name='duties')
-    name = models.CharField(max_length=50)
-    date = models.DateField()
-    start_time = models.TimeField()
+    member = models.ForeignKey('ForceMember', on_delete=models.CASCADE, related_name='duties')
+    name = models.CharField(max_length=20)
+    rank = models.CharField(max_length=20, blank=True)
+    phone = models.CharField(max_length=15, blank=True)
+    destination = models.CharField(max_length=50, default="N/A")
+    date = models.DateField(default=date.today)
+    start_time = models.TimeField(default=time(8,0))
     end_time = models.TimeField()
+    serial_no = models.CharField(max_length=10, blank=True, null=True, unique=True)
 
-    def __str__(self):
-        return f"{self.name} ({self.date})"
+    def save(self, *args, **kwargs):
+        # member থেকে স্বয়ংক্রিয়ভাবে নাম, পদবী, ফোন নেওয়া 
+        if self.member:
+            self.name = self.member.name
+            self.rank = self.member.get_rank_display()
+            self.phone = self.member.phone
+
+        # serial_no স্বয়ংক্রিয়
+        if not self.serial_no:
+            last_duty = Duty.objects.all().order_by('-id').first()
+            if last_duty and last_duty.serial_no:
+                self.serial_no = str(int(last_duty.serial_no)+1)
+            else:
+                self.serial_no = "0000001"
+
+        super().save(*args, **kwargs)
+
 
 class Mt(models.Model):
     member = models.ForeignKey(ForceMember, on_delete=models.CASCADE, related_name='mt')

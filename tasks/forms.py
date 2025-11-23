@@ -152,4 +152,34 @@ class PermanentModelForm(forms.ModelForm):
 class CompanySelectForm(forms.ModelForm):
     class Meta:
         model = ForceMember
-        fields = ['company']
+        fields = ['company'] 
+
+
+
+
+from django import forms
+from .models import Duty
+
+class DutyForm(forms.ModelForm):
+    member_no = forms.IntegerField(
+        label="Member No",
+        required=False,
+        widget=forms.NumberInput(attrs={'class': 'border-2 border-blue-400 rounded p-2 w-full'})
+    )
+    members = forms.ModelMultipleChoiceField(
+        queryset=ForceMember.objects.all(),
+        required=False,
+        widget=forms.SelectMultiple(attrs={
+            'class': 'border-2 border-blue-400 rounded p-2 w-full h-40'
+        })
+    )
+
+    class Meta:
+        model = Duty
+        fields = ['member_no', 'members', 'date', 'start_time', 'end_time', 'destination']
+        widgets = {
+            'date': forms.DateInput(attrs={'type': 'date', 'class': 'border-2 border-blue-400 rounded p-2 w-full'}),
+            'start_time': forms.TimeInput(attrs={'type': 'time', 'class': 'border-2 border-blue-400 rounded p-2 w-full'}),
+            'end_time': forms.TimeInput(attrs={'type': 'time', 'class': 'border-2 border-blue-400 rounded p-2 w-full'}),
+            'destination': forms.TextInput(attrs={'class': 'border-2 border-blue-400 rounded p-2 w-full'}),
+        }

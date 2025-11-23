@@ -17,9 +17,10 @@
     <th>Force</th>
     <th>Phone</th>
     <th>Email</th>
-    <th>Company</th>
     <th>Detail</th>
-    <th>Send</th>
+    <th>Company|Send</th>
+    
+    
 </tr>
 </thead>
 
@@ -36,9 +37,9 @@
     <td>{{ m.email }}</td>
 
     <!-- Company column -->
-    <td class="company-name">
+    {% comment %} <td class="company-name">
         {{ m.company }}
-    </td>
+    </td> {% endcomment %}
 
     <!-- View -->
     <td>
@@ -60,7 +61,7 @@
             <input type="hidden" name="member_id" value="{{ m.id }}">
 
             <button type="button"
-                class="assign-btn bg-purple-500 text-white px-3 py-1 rounded hover:bg-purple-700">
+                class="assign-btn bg-blue-600 text-semibold px-3 py-1 rounded hover:bg-purple-400 cursor-pointer">
                 Assign
             </button>
 

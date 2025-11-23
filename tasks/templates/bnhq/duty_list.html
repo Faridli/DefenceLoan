@@ -1,0 +1,55 @@
+{% extends "dashboard/css.html" %}
+{% load widget_tweaks %}
+{% block title %}Duty List{% endblock %}
+
+{% block content %}
+<main class="max-w-6xl mx-auto p-6 bg-white rounded-xl shadow mt-10">
+
+    <h2 class="text-2xl font-bold mb-6 text-center">All Duties</h2>
+
+    <table class="w-full border-collapse border border-gray-300">
+        <thead>
+            <tr class="bg-amber-400 text-left">
+                <th class="border px-4 py-2">Serial No</th>
+                <th class="border px-4 py-2">Member No</th>
+                <th class="border px-4 py-2">Name</th>
+                <th class="border px-4 py-2">Rank</th>
+                <th class="border px-4 py-2">Phone</th>
+                <th class="border px-4 py-2">Date</th>
+                <th class="border px-4 py-2">Start Time</th>
+                <th class="border px-4 py-2">End Time</th>
+                <th class="border px-4 py-2">Destination</th>
+                <th class="border px-4 py-2">Edit</th>
+                <th class="border px-4 py-2">Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for duty in duties %}
+            <tr class="hover:bg-gray-100">
+                <td class="border px-4 py-2">{{ duty.serial_no }}</td>
+                <td class="border px-4 py-2">{{ duty.member.no }}</td>
+                <td class="border px-4 py-2">{{ duty.name }}</td>
+                <td class="border px-4 py-2">{{ duty.rank }}</td>
+                <td class="border px-4 py-2">{{ duty.phone }}</td>
+                <td class="border px-4 py-2">{{ duty.date }}</td>
+                <td class="border px-4 py-2">{{ duty.start_time }}</td>
+                <td class="border px-4 py-2">{{ duty.end_time }}</td>
+                <td class="border px-4 py-2">{{ duty.destination }}</td>
+                <td class="border px-4 py-2">
+                    <a href="{% url 'duty_edit' duty.id %}" class="text-blue-600 hover:bg-green-500 underline mr-2">Edit</a>
+                    
+                </td>
+                <td class="border px-4 py-2">
+                   
+                    <a href="{% url 'duty_delete' duty.id %}" class="text-red-600 hover:bg-red-700 underline">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="10" class="border px-4 py-2 text-center">No duties found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</main>
+{% endblock %}

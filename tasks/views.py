@@ -146,8 +146,94 @@ def Address(request, member_id):
     return render(request, "bnhq/address.html", context)
 
 
+from django.shortcuts import render, redirect
+from .forms import DutyForm
+from .models import ForceMember
+# def duty_create(request):
+#     if request.method == "POST":
+#         form = DutyForm(request.POST)
+#         if form.is_valid():
+#             member_no = form.cleaned_data['member_no']
+#             member = ForceMember.objects.filter(no=member_no).first()
+
+#             if not member:
+#                 form.add_error('member_no', "Member not found")
+#             else:
+#                 duty = form.save(commit=False)
+#                 duty.member = member
+#                 duty.save()
+#                 return redirect('duty_list')
+#     else:
+#         form = DutyForm()
+
+#     members = ForceMember.objects.all()   # ★ ForceMember list send
+
+#     return render(request, 'bnhq/duty_form.html', {
+#         'form': form,
+#         'members': members
+#     })
 
 
 
+# views.py
+from django.shortcuts import render, redirect
+from .forms import DutyForm
+from .models import Duty
+
+def duty_create_group(request):
+    if request.method == "POST":
+        form = DutyForm(request.POST)
+        if form.is_valid():
+            members = form.cleaned_data['members']
+            destination = form.cleaned_data['destination']
+            start_time = form.cleaned_data['start_time']
+            end_time = form.cleaned_data['end_time']
+
+            for member in members:
+                duty = Duty(
+                    member=member,
+                    name=member.name,
+                    rank=member.get_rank_display(),
+                    phone=member.phone,
+                    destination=destination,
+                    start_time=start_time,
+                    end_time=end_time
+                )
+                duty.save()
+
+            return redirect('duty_list')
+    else:
+        form = DutyForm()
+    return render(request, 'bnhq/duty_create_group.html', {'form': form})
 
 
+
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import Duty
+from .forms import DutyForm
+
+def duty_edit(request, pk):
+    duty = get_object_or_404(Duty, pk=pk)
+    if request.method == "POST":
+        form = DutyForm(request.POST, instance=duty)
+        if form.is_valid():
+            form.save()
+            return redirect('duty_list')
+    else:
+        form = DutyForm(instance=duty)
+    return render(request, 'bnhq/duty_form.html', {'form': form, 'edit': True})
+
+
+from .models import Duty
+def duty_list(request):
+    duties = Duty.objects.all().order_by('-date', '-start_time')
+    return render(request, 'bnhq/duty_list.html', {'duties': duties})
+
+
+# views.py
+def duty_delete(request, pk):
+    duty = get_object_or_404(Duty, pk=pk)
+    if request.method == "POST":
+        duty.delete()
+        return redirect('duty_list')
+    return render(request, 'bnhq/duty_delete.html', {'duty': duty})

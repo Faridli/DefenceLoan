@@ -8,7 +8,10 @@ from tasks.views import (
      # -----------------------------
     Force_bio,
     Force_detail,
-
+    duty_create,
+    duty_edit,
+    duty_list,
+    duty_delete,
    
 )
 # app_name = "tasks"  
@@ -25,8 +28,15 @@ urlpatterns = [
     # Force Bio  and Bn-HQ
     # -----------------------------
     path('bio/', Force_bio, name='force-bio'),
-
     path('force/',Force_detail, name='force-detail'),
+
+    
+    path('duties/add/',duty_create, name='duty_create'), 
+    path('duties/<int:pk>/edit/', duty_edit, name='duty_edit'),
+    
+    path('duties/',duty_list, name='duty_list'),
+    path('duties/<int:pk>/delete/', duty_delete, name='duty_delete'),
+
 
     # path('br/',  List_of_All_Branch, name='allbr'),
  
