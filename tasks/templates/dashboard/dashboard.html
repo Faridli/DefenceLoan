@@ -145,18 +145,22 @@
 
     <!-- MI -->
     <div class="bg-green-100 text-green-800 text-2xl font-semibold px-8 py-6 rounded-2xl shadow-md border border-purple-200 hover:shadow-lg hover:scale-105 transition-transform duration-300">
+      <a href="{% url 'miroom_visit_list' %}"> 
       <h3 class="text-4xl font-bold mb-2">Mi</h3>
       <div class="flex justify-between items-start">
         <div>
           <p class="font-medium">Position</p>
           <p>Sector-2, Uttara, Dhaka</p>
         </div>
-        <div class="p-4 rounded-full shadow-md bg-purple-200 flex items-center justify-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-purple-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <a href="{% url 'miroom_visit_create' %}" class="hover:bg-amber-300 cursor-pointer">
+              <div class="p-4 rounded-full shadow-md bg-purple-200 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-purple-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
           </svg>
         </div>
-      </div>
+        </a>
+      </div> 
+      </a>
     </div>
 
     <!-- A Branch -->

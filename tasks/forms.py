@@ -40,7 +40,7 @@ class ForceModelForm(forms.ModelForm):
         fields = [
             'no', 'name', 'rank', 'force', 
             'svc_join','mother_unit', 'rab_join', 'birth_day',
-            'nid', 'email', 'phone', 'wf_phone','company',
+            'nid', 'email', 'phone','photo', 'wf_phone','company',
         ]
         labels = {
             'no': 'Personal No',
@@ -54,7 +54,8 @@ class ForceModelForm(forms.ModelForm):
             'nid': 'NID',
             'email': 'Email',
             'phone': 'Phone',
-            'wf_phone': 'Wife Phone',
+            'photo':'photo',
+            'wf_phone': 'Wife Phone', 
             'company':'company',
         }
         widgets = {
@@ -67,6 +68,7 @@ class ForceModelForm(forms.ModelForm):
             'nid': forms.TextInput(attrs={'class': INPUT_CLASSES, 'placeholder': 'NID'}),
             'email': forms.EmailInput(attrs={'class': INPUT_CLASSES, 'placeholder': 'Email'}),
             'phone': forms.TextInput(attrs={'class': INPUT_CLASSES, 'placeholder': 'Phone Number'}),
+           'photo': forms.FileInput(attrs={'class': INPUT_CLASSES,}),
             'wf_phone': forms.TextInput(attrs={'class': INPUT_CLASSES, 'placeholder': 'Wife Phone Number'}),
         }
 
@@ -155,31 +157,87 @@ class CompanySelectForm(forms.ModelForm):
         fields = ['company'] 
 
 
-
-
+# forms.py
 from django import forms
-from .models import Duty
-
+from .models import Duty, ForceMember
 class DutyForm(forms.ModelForm):
-    member_no = forms.IntegerField(
-        label="Member No",
+
+    member_numbers = forms.CharField(
+        label="Member Numbers",
         required=False,
-        widget=forms.NumberInput(attrs={'class': 'border-2 border-blue-400 rounded p-2 w-full'})
+        widget=forms.Textarea(attrs={
+            "placeholder": "101, 102, 103\nঅথবা\n101\n102\n103",
+            "class": "border border-gray-300 rounded w-full p-2"
+        })
     )
+
+    member_no = forms.IntegerField(
+    widget=forms.NumberInput(attrs={
+        'class': 'border-2 border-blue-400 rounded p-2 w-full',
+        'placeholder': 'Member No'
+    })
+)
+
+
     members = forms.ModelMultipleChoiceField(
         queryset=ForceMember.objects.all(),
         required=False,
         widget=forms.SelectMultiple(attrs={
-            'class': 'border-2 border-blue-400 rounded p-2 w-full h-40'
+            'class': 'border border-blue-400 rounded p-2 w-full h-40'
         })
     )
 
     class Meta:
         model = Duty
-        fields = ['member_no', 'members', 'date', 'start_time', 'end_time', 'destination']
-        widgets = {
+        fields = [ 
+            'serial_no',
+            'member_numbers',
+            'member_no',
+            'members',
+            'date',
+            'start_time',
+            'end_time',
+            'destination'
+        ]
+        widgets = { 
+            'serial_no': forms.TextInput(attrs={
+                'readonly': 'readonly',
+                'class': 'bg-gray-100'
+            }),
             'date': forms.DateInput(attrs={'type': 'date', 'class': 'border-2 border-blue-400 rounded p-2 w-full'}),
             'start_time': forms.TimeInput(attrs={'type': 'time', 'class': 'border-2 border-blue-400 rounded p-2 w-full'}),
             'end_time': forms.TimeInput(attrs={'type': 'time', 'class': 'border-2 border-blue-400 rounded p-2 w-full'}),
             'destination': forms.TextInput(attrs={'class': 'border-2 border-blue-400 rounded p-2 w-full'}),
         }
+
+
+
+
+from django import forms
+from .models import MiRoomVisit, ForceMember
+
+class MiRoomVisitForm(forms.ModelForm):
+    per_number = forms.IntegerField(label="Per Number", required=True)
+
+    class Meta:
+        model = MiRoomVisit
+        fields = ['per_number', 'symptoms', 'treatment']
+        widgets = {
+            'symptoms': forms.Textarea(attrs={'rows': 2}),
+            'treatment': forms.Textarea(attrs={'rows': 2}),
+        }
+
+    def clean_per_number(self):
+        per_no = self.cleaned_data['per_number']
+        try:
+            member = ForceMember.objects.get(no=per_no)
+        except ForceMember.DoesNotExist:
+            raise forms.ValidationError("Invalid Per Number!")
+        return member
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.member = self.cleaned_data['per_number']  # assign ForceMember instance
+        if commit:
+            instance.save()
+        return instance

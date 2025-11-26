@@ -1,0 +1,75 @@
+{% extends "dashboard/css.html" %}
+{% load widget_tweaks %}
+{% block title %}MI Room Visit{% endblock %}
+
+{% block content %}
+<main class="p-6 bg-white rounded-xl shadow-md">
+
+    <h1 class="bg-amber-500 text-4xl font-bold mb-6 text-center text-gray-900">Mi Room</h1>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <!-- Per Number -->
+        <div class="flex items-center mb-4">
+            <label class="w-40 font-semibold text-lg text-gray-800">Per Number</label>
+            {{ form.per_number|add_class:"flex-1 border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500" }}
+        </div>
+
+        <!-- Rank -->
+        <div class="flex items-center mb-4">
+            <label class="w-40 font-semibold text-lg text-gray-800">Rank</label>
+            <input type="text" id="rank"
+                class="flex-1 border border-gray-300 rounded px-3 py-2 bg-gray-100"
+                readonly>
+        </div>
+
+        <!-- Name -->
+        <div class="flex items-center mb-4">
+            <label class="w-40 font-semibold text-lg text-gray-800">Name</label>
+            <input type="text" id="name"
+                class="flex-1 border border-gray-300 rounded px-3 py-2 bg-gray-100"
+                readonly>
+        </div>
+
+        <!-- Symptoms -->
+        <div class="flex items-center mb-4">
+            <label class="w-40 font-semibold text-lg text-gray-800">Symptoms</label>
+            {{ form.symptoms|add_class:"flex-1 border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500" }}
+        </div>
+
+        <!-- Treatment -->
+        <div class="flex items-center mb-4">
+            <label class="w-40 font-semibold text-lg text-gray-800">Treatment</label>
+            {{ form.treatment|add_class:"flex-1 border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500" }}
+        </div>
+
+        <button class="bg-blue-600 text-white text-2xl px-4 py-2 rounded hover:bg-blue-700 transition-colors">
+            Save
+        </button>
+    </form>
+
+</main>
+
+<script>
+document.getElementById("id_per_number").addEventListener("input", function () {
+    const per_no = this.value;
+    if (!per_no) {
+        document.getElementById("rank").value = "";
+        document.getElementById("name").value = "";
+        return;
+    }
+    fetch(`/tasks/get-member/${per_no}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById("rank").value = data.rank;
+                document.getElementById("name").value = data.name;
+            } else {
+                document.getElementById("rank").value = "";
+                document.getElementById("name").value = "";
+            }
+        });
+});
+</script>
+{% endblock %}

@@ -1,8 +1,14 @@
 from django.db import models
-from datetime import date, time
+from datetime import date, time 
+from django.core.exceptions import ValidationError
 # -------------------------------
 # 🔹 All Force 
 # -------------------------------
+def validate_jpg(value):
+    ext = value.name.split('.')[-1].lower()
+    if ext not in ['jpg', 'jpeg']:
+        raise ValidationError("Only JPG/JPEG files are allowed.") 
+
 class ForceMember(models.Model):
     COM_CHOICES = [
         ('OTHER', '......'),
@@ -41,6 +47,12 @@ class ForceMember(models.Model):
     no = models.IntegerField(unique=True)
     name = models.CharField(max_length=50)
     rank = models.CharField(max_length=20, choices=RANK_CHOICES)
+    photo = models.ImageField(
+        upload_to='photos/',
+        validators=[validate_jpg],
+        blank=True,
+        null=True
+    )
     force = models.CharField(max_length=20, choices=FORCE_CHOICES)
 
     company = models.CharField(max_length=50, choices=COM_CHOICES, blank=True, null=True)
@@ -124,8 +136,9 @@ class MiRoomVisit(models.Model):
     treatment = models.TextField()
 
     def __str__(self):
-        return f"{self.member.name} - {self.date}"
-
+        return f"{self.member.name} - {self.date}" 
+    
+    
 class Duty(models.Model):
     member = models.ForeignKey('ForceMember', on_delete=models.CASCADE, related_name='duties')
     name = models.CharField(max_length=20)
@@ -138,19 +151,24 @@ class Duty(models.Model):
     serial_no = models.CharField(max_length=10, blank=True, null=True, unique=True)
 
     def save(self, *args, **kwargs):
+
         # member থেকে স্বয়ংক্রিয়ভাবে নাম, পদবী, ফোন নেওয়া 
         if self.member:
             self.name = self.member.name
             self.rank = self.member.get_rank_display()
             self.phone = self.member.phone
 
-        # serial_no স্বয়ংক্রিয়
+        # serial_no স্বয়ংক্রিয়ভাবে তৈরি (৭ সংখ্যার)
         if not self.serial_no:
-            last_duty = Duty.objects.all().order_by('-id').first()
+            last_duty = Duty.objects.order_by('-id').first()
+
             if last_duty and last_duty.serial_no:
-                self.serial_no = str(int(last_duty.serial_no)+1)
+                new_serial = int(last_duty.serial_no) + 1
             else:
-                self.serial_no = "0000001"
+                new_serial = 1
+            
+            # ৭ সংখ্যায় রূপান্তর
+            self.serial_no = str(new_serial).zfill(7)
 
         super().save(*args, **kwargs)
 
