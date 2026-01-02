@@ -540,3 +540,10 @@ def CPC_One_Br(request, company):
     })
 
 
+
+
+
+
+
+pip install -r requirements.txt; python manage.py collectstatic --noinput   # টাকা দিয়ে মাই্রগ্রেশন করতে হয় 
+pip install -r requirements.txt && python manage.py migrate   # টাকা ছাড়া মাই্রগ্রেশন করতে হয় 
