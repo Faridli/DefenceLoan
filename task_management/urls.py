@@ -1,20 +1,25 @@
 from django.contrib import admin
-from debug_toolbar.toolbar import debug_toolbar_urls
 from django.urls import path, include
 from django.conf import settings
-from django.conf.urls.static import static
-from core.views import home,no_permission  
-from django.conf.urls.static import static
+from django.conf.urls.static import static 
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path("tasks/", include("tasks.urls")),
-    path("users/", include("users.urls")),
-    path("",home, name="home"),
-    path("no-permission",no_permission, name="no-permission"),
-] + debug_toolbar_urls()
 
-# ⭐ মিডিয়া ফাইল সার্ভ করার জন্য
+    # Auth URLs
+    path('sign-in/', auth_views.LoginView.as_view(template_name='users/sign_in.html'), name='sign-in'),
+    
+    # App URLs
+    path('', include('tasks.urls')),
+]
+
+# Debug Toolbar only in DEBUG mode
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    import debug_toolbar
+    urlpatterns = [
+        path('__debug__/', include(debug_toolbar.urls)),
+    ] + urlpatterns
 
+    # Serve media files in development
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -33,10 +33,15 @@ INSTALLED_APPS = [
     'widget_tweaks',
 
     # Local apps
-    'tasks.apps.TasksConfig',
-    'users',
-    'core',
+    'tasks',    
 ]
+
+
+# =======================
+# Custom User Model
+# =======================
+AUTH_USER_MODEL = 'tasks.User'  # 'tasks' হলো আপনার app name, 'User' হলো model name
+
 
 # =======================
 # Middleware
@@ -137,4 +142,16 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 FRONTEND_URL = 'http://127.0.0.1:8000' 
 
-LOGIN_URL = 'sign-in'
+
+# SSLCOMMERZ credentials
+SSLCOMMERZ_STORE_ID = config('SSLCOMMERZ_STORE_ID')
+SSLCOMMERZ_STORE_PASS = config('SSLCOMMERZ_STORE_PASS')
+SSLCOMMERZ_URL = config('SSLCOMMERZ_URL')
+
+
+# login এর জন্য URL ঠিক করুন
+LOGIN_URL = 'sign-in'        # এখানে আমরা urls.py তে নাম ব্যবহার করব
+LOGIN_REDIRECT_URL = '/tasks/dashboard/'  # লগইন হয়ে গেলে কোথায় যাবে
+LOGOUT_REDIRECT_URL = '/logout/'         # লগআউট হলে কোথায় যাবে
+
+

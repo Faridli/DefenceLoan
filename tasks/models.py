@@ -1,223 +1,70 @@
 from django.db import models
-from datetime import date, time 
-from django.core.exceptions import ValidationError  
-# from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 
-
-# -------------------------------
-# 🔹 All Force 
-# -------------------------------
 def validate_jpg(value):
-    ext = value.name.split('.')[-1].lower()
-    if ext not in ['jpg', 'jpeg']:
-        raise ValidationError("Only JPG/JPEG files are allowed.") 
+    import os
+    ext = os.path.splitext(value.name)[1]
+    if ext.lower() not in ['.jpg', '.jpeg']:
+        raise ValidationError('Only JPG/JPEG files are allowed.')
 
-class ForceMember(models.Model):
-    COM_CHOICES = [
-       
-        ('CPC-1', 'CPC-1'),
-        ('CPC-2', 'CPC-2'),
-        ('CPC-3', 'CPC-3'),
-        ('CPSC', 'CPSC'),
-        ('HQ', 'HQ'),
-        ('Bn HQ', 'Bn HQ'),
-        ('Ro', 'RO'), 
-        ('Mi', 'Mi'), 
-        ('A Branch', 'A Branch'), 
-        ('Acct BR', 'Acct Br'), 
-        ('RAB-1 Out', 'RAB-1 Out'), 
-    ]
-
-    RANK_CHOICES = [
-        ('OTHER', '......'),
-        ('Offr', 'Offr'),
-        ('DAD', 'DAD'),
-        ('SI', 'SI'),
-        ('ASI', 'ASI'),
-        ('Nek', 'Nek'),
-        ('Con', 'Con'),
-        ('Civ', 'Civ'),
-    ]
-    FORCE_CHOICES = [
-        ('OTHER', '......'),
-        ('ARMY', 'Army'),
-        ('NAVY', 'Navy'),
-        ('AIR', 'Air'),
-        ('POLICE', 'Police'),
-        ('BGB', 'BGB'),
-        ('VDP', 'Ansar VDP'),
-        ('CIV', 'Civ'),
-    ]
-
-    # user = models.OneToOneField(
-    #     User, 
-    #     on_delete=models.CASCADE, 
-    #     null = True, 
-    #     blank = True, 
-    #     related_name = 'force_profile'
-
-    # )
-    no = models.IntegerField(unique=True)
-    name = models.CharField(max_length=50)
-    rank = models.CharField(max_length=20, choices=RANK_CHOICES)
-    photo = models.ImageField(
-        upload_to='tasks_sign_image',
-        # validators=[validate_jpg],
-        blank=True,
-        null=True
-    )
-    force = models.CharField(max_length=20, choices=FORCE_CHOICES)
-
-    company = models.CharField(max_length=50, choices=COM_CHOICES, blank=True, null=True)
-
-    svc_join = models.DateField()
-    mother_unit = models.CharField(max_length=50, default="Unknown")
-    rab_join = models.DateField()
-    birth_day = models.DateField()  
-
-    nid = models.CharField(max_length=20, unique=True)
-    email = models.EmailField(unique=True)
-    phone = models.CharField(max_length=15)
-    wf_phone = models.CharField(max_length=15) 
-    out_date = models.DateField(blank=True, null=True) 
+class User(AbstractUser):
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    national_id = models.FileField(upload_to='nid/', blank=True, null=True)
+    service_id_card = models.FileField(upload_to='service_id/', blank=True, null=True)
+    live_photo = models.FileField(upload_to='photos/', blank=True, null=True, validators=[validate_jpg])
+    birth_date = models.DateField(blank=True, null=True)
+    spouse_name = models.CharField(max_length=255, blank=True, null=True)
+    spouse_nid = models.CharField(max_length=20, blank=True, null=True)
 
     def __str__(self):
-        return f"{self.get_rank_display()} - {self.name}"
+        return self.username
 
-# -------------------------------
-# 🔹 Present Address
-# -------------------------------
-class PresentAddress(models.Model):
-    member = models.OneToOneField(
-        ForceMember,
-        on_delete=models.CASCADE,
-        related_name='present_address'
-    )
-    house = models.CharField(max_length=20,blank=True, null=True)
-    road = models.CharField(max_length=20,blank=True, null=True)
-    sector = models.CharField(max_length=20,blank=True, null=True)
-    village = models.CharField(max_length=20,blank=True, null=True)
-    post = models.CharField(max_length=20,blank=True, null=True)
-    thana = models.CharField(max_length=30,blank=True, null=True)
-    district = models.CharField(max_length=30,blank=True, null=True)
-    division = models.CharField(max_length=30,blank=True, null=True)
+class LoanApplication(models.Model):
+    STATUS_CHOICES = (('Pending', 'Pending'), ('Approved', 'Approved'), ('Rejected', 'Rejected'))
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    months = models.PositiveIntegerField()
+    purpose = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+    basic_salary = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    salary_account_number = models.CharField(max_length=50, blank=True, null=True)
+    previous_loans = models.JSONField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
-        return f"Present Address of {self.member.name}"
+class OTPVerification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    otp = models.CharField(max_length=6)
+    purpose = models.CharField(max_length=50)
+    is_verified = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
 
-# -------------------------------
-# 🔹 Permanent Address
-# -------------------------------
-class PermanentAddress(models.Model):
-    member = models.OneToOneField(
-        ForceMember,
-        on_delete=models.CASCADE,
-        related_name='permanent_address'
-    )
-    house = models.CharField(max_length=20,blank=True, null=True)
-    road = models.CharField(max_length=20,blank=True, null=True)
-    sector = models.CharField(max_length=20,blank=True, null=True)
-    village = models.CharField(max_length=20,blank=True, null=True)
-    post = models.CharField(max_length=20, blank=True, null=True)
-    thana = models.CharField(max_length=30,blank=True, null=True)
-    district = models.CharField(max_length=30,blank=True, null=True)
-    division = models.CharField(max_length=30,blank=True, null=True)
+class Payment(models.Model):
+    loan = models.ForeignKey(LoanApplication, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    transaction_id = models.CharField(max_length=100)
+    status = models.CharField(max_length=20)
+    created_at = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"Permanent Address of {self.member.name}"
+class UserDevice(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    latitude = models.FloatField()
+    longitude = models.FloatField()
+    device_info = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
 
-# -------------------------------
-# 🔹 Acct Br
-# # -------------------------------
-# class AcctBr(models.Model):
-#     LPC_CHOICES = [
-#         ('other', ' '),
-#         ('lpcin', 'in'),
-#         ('lpcout', 'out'),
-#     ]
-#     member = models.ForeignKey(ForceMember, on_delete=models.CASCADE, related_name='acctbr')
-#     lpc = models.CharField(max_length=10, choices=LPC_CHOICES, default='lpcin')
-#     destination = models.CharField(max_length=255)
-
-#     def __str__(self):
-#         return f"{self.member.name}-{self.lpc}"
+class UserVerification(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    nid_image = models.ImageField(upload_to='nid/')
+    service_id_image = models.ImageField(upload_to='service/')
+    live_photo = models.ImageField(upload_to='live/', validators=[validate_jpg])
+    is_verified = models.BooleanField(default=False)
 
 
+from django.conf import settings
+from django.db import models
 
-class Ro(models.Model):
-    member = models.ForeignKey(ForceMember, on_delete=models.CASCADE, related_name='ro')
-    destination = models.CharField(max_length=100, default='RAB-1')
-    sing = models.ImageField(upload_to='signatures/', blank=True, null=True)
-
-    def __str__(self):
-        return self.name
-
-class MiRoomVisit(models.Model):
-    member = models.ForeignKey(ForceMember, on_delete=models.CASCADE, related_name='mi_visits')
-    symptoms = models.TextField()
-    date = models.DateField(auto_now_add=True)
-    treatment = models.TextField()
-
-    def __str__(self):
-        return f"{self.member.name} - {self.date}" 
-    
-    
-class Duty(models.Model):
-    member = models.ForeignKey('ForceMember', on_delete=models.CASCADE, related_name='duties')
-    name = models.CharField(max_length=20)
-    rank = models.CharField(max_length=20, blank=True)
-    phone = models.CharField(max_length=15, blank=True)
-    destination = models.CharField(max_length=50, default="N/A")
-    date = models.DateField(default=date.today)
-    start_time = models.TimeField(default=time(8,0))
-    end_time = models.TimeField()
-    serial_no = models.CharField(max_length=10, blank=True, null=True, unique=True) 
-     # স্বাক্ষরের জন্য ফিল্ড
-    signature = models.ImageField(upload_to='signatures/', null=True, blank=True)
-
-    def save(self, *args, **kwargs):
-
-        # member থেকে স্বয়ংক্রিয়ভাবে নাম, পদবী, ফোন নেওয়া 
-        if self.member:
-            self.name = self.member.name
-            self.rank = self.member.get_rank_display()
-            self.phone = self.member.phone
-
-        # serial_no স্বয়ংক্রিয়ভাবে তৈরি (৭ সংখ্যার)
-        if not self.serial_no:
-            last_duty = Duty.objects.order_by('-id').first()
-
-            if last_duty and last_duty.serial_no:
-                new_serial = int(last_duty.serial_no) + 1
-            else:
-                new_serial = 1
-            
-            # ৭ সংখ্যায় রূপান্তর
-            self.serial_no = str(new_serial).zfill(7)
-
-        super().save(*args, **kwargs)
-
-
-class Mt(models.Model):
-    member = models.ForeignKey(ForceMember, on_delete=models.CASCADE, related_name='mt')
-    name = models.CharField(max_length=50)
-
-    def __str__(self):
-        return self.name
-
-class TrgBr(models.Model):
-    member = models.ForeignKey(ForceMember, on_delete=models.CASCADE, related_name='trg')
-    rab_id = models.IntegerField(unique=True)
-
-    def __str__(self):
-        return f"TRG for {self.member.name} ({self.rab_id})"
-
-
-
-class MemberPosting(models.Model):
-    member = models.ForeignKey("ForceMember", on_delete=models.CASCADE)
-    status = models.CharField(max_length=20, default="pending")
-
-    def __str__(self):
-        return f"{self.member.name} - {self.status}"
-
+class SomeModel(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

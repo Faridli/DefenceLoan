@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">Apply for Loan</h1>
+
+{% if error %}
+<p class="text-red-600 mb-2">{{ error }}</p>
+{% endif %}
+
+<form method="POST">
+    {% csrf_token %}
+    <div class="mb-2">
+        <label>Amount (BDT)</label>
+        <input type="number" name="amount" class="border p-1 w-full" required>
+    </div>
+    <div class="mb-2">
+        <label>Months</label>
+        <input type="number" name="months" class="border p-1 w-full" required>
+    </div>
+    <div class="mb-2">
+        <label>Purpose</label>
+        <textarea name="purpose" class="border p-1 w-full"></textarea>
+    </div>
+    <div class="mb-2">
+        <label>Basic Salary</label>
+        <input type="number" name="basic_salary" class="border p-1 w-full">
+    </div>
+    <div class="mb-2">
+        <label>Salary Account Number</label>
+        <input type="text" name="salary_account_number" class="border p-1 w-full">
+    </div>
+    <div class="mb-2">
+        <label>Previous Loans (JSON)</label>
+        <textarea name="previous_loans" class="border p-1 w-full"></textarea>
+    </div>
+    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Submit</button>
+</form>
+{% endblock %}

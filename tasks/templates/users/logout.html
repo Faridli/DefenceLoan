@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Logged Out | Loan App{% endblock %}
+
+{% block content %}
+<div class="flex justify-center items-center min-h-[60vh]">
+    <div class="bg-white shadow-xl rounded-2xl p-10 max-w-md w-full text-center">
+
+        <!-- Icon -->
+        <div class="flex justify-center mb-4">
+            <div class="bg-green-100 text-green-600 p-4 rounded-full text-3xl">
+                ✅
+            </div>
+        </div>
+
+        <!-- Message -->
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">
+            আপনি সফলভাবে লগআউট হয়েছেন
+        </h2>
+
+        <p class="text-gray-500 mb-6 text-sm">
+            নিরাপত্তার জন্য আপনার সেশন শেষ করা হয়েছে।
+        </p>
+
+        <!-- Buttons -->
+        <div class="flex justify-center gap-4">
+            <a href="{% url 'sign-in' %}"
+               class="bg-blue-600 hover:bg-blue-700 transition text-white px-5 py-2 rounded-lg font-semibold">
+                🔐 আবার লগইন করুন
+            </a>
+
+            <a href="{% url 'dashboard' %}"
+               class="border border-gray-300 hover:bg-gray-100 transition px-5 py-2 rounded-lg font-semibold">
+                🏠 হোম
+            </a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
