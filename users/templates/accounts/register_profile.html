@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="min-h-screen flex items-center justify-center bg-gray-100">
+<div class="w-full max-w-3xl bg-white shadow-lg rounded-xl p-8">
+
+    <h2 class="text-3xl font-bold text-indigo-600 mb-6">
+        Complete Your Profile
+    </h2>
+
+    <form method="POST" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+
+        <h3 class="text-xl font-semibold border-b pb-1">Personal Information</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {{ form.phone }}
+            {{ form.birth_date }}
+            {{ form.spouse_name }}
+            {{ form.spouse_nid }}
+        </div>
+
+        <h3 class="text-xl font-semibold border-b pb-1 mt-4">Documents</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {{ form.national_id }}
+            {{ form.service_id_card }}
+            {{ form.live_photo }}
+        </div>
+
+        <button class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold">
+            Save Profile
+        </button>
+    </form>
+
+</div>
+</div>
+
+{% endblock %}

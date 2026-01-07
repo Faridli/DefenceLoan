@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="min-h-screen flex items-center justify-center bg-gray-100">
+    <div class="w-full max-w-md bg-white shadow-lg rounded-xl p-8">
+
+        <h2 class="text-3xl font-bold text-center text-indigo-600 mb-6">
+            Create Account
+        </h2>
+
+        <form method="POST" class="space-y-4">
+            {% csrf_token %}
+
+            {{ form.username }}
+            {{ form.email }}
+            {{ form.password }}
+            {{ form.confirm_password }}
+
+            {% if form.errors %}
+            <div class="bg-red-100 text-red-600 p-2 rounded">
+                {{ form.errors }}
+            </div>
+            {% endif %}
+
+            <button type="submit"
+                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold">
+                Register
+            </button>
+        </form>
+
+        <div class="mt-4 text-center space-y-2">
+            <a href="{% url 'forgot_password' %}" class="text-red-500 font-semibold">
+                Forgot Password?
+            </a>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

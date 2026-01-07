@@ -21,12 +21,12 @@
             নিরাপত্তার জন্য আপনার সেশন শেষ করা হয়েছে।
         </p>
 
-        <!-- Buttons -->
+        {% comment %} <!-- Buttons -->
         <div class="flex justify-center gap-4">
             <a href="{% url 'sign-in' %}"
                class="bg-blue-600 hover:bg-blue-700 transition text-white px-5 py-2 rounded-lg font-semibold">
                 🔐 আবার লগইন করুন
-            </a>
+            </a> {% endcomment %}
 
             <a href="{% url 'dashboard' %}"
                class="border border-gray-300 hover:bg-gray-100 transition px-5 py-2 rounded-lg font-semibold">

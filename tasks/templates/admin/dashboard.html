@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Loan App{% endblock %}
+
+{% block content %}
+
+<body class="bg-gray-100 font-sans">
+
+<!-- Navbar -->
+<nav class="bg-white shadow p-4 flex justify-between items-center">
+    <h1 class="text-xl font-bold text-indigo-600">Loan Dashboard</h1>
+    <div>
+        <a href="{% url 'apply_loan' %}" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 mr-2">Apply Loan</a>
+        <a href="{% url 'logout' %}" class="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300">Logout</a>
+    </div>
+</nav>
+
+<!-- Stats Cards -->
+<div class="max-w-7xl mx-auto mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 px-4">
+    <div class="bg-white shadow rounded p-4">
+        <h2 class="text-gray-500">Total Loans</h2>
+        <p class="text-2xl font-bold text-indigo-600">{{ total }}</p>
+    </div>
+    <div class="bg-white shadow rounded p-4">
+        <h2 class="text-gray-500">Approved</h2>
+        <p class="text-2xl font-bold text-green-500">{{ approved }}</p>
+    </div>
+    <div class="bg-white shadow rounded p-4">
+        <h2 class="text-gray-500">Pending</h2>
+        <p class="text-2xl font-bold text-yellow-500">{{ pending }}</p>
+    </div>
+    <div class="bg-white shadow rounded p-4">
+        <h2 class="text-gray-500">Rejected</h2>
+        <p class="text-2xl font-bold text-red-500">{{ rejected }}</p>
+    </div>
+</div>
+
+<!-- Loan Table -->
+<div class="max-w-7xl mx-auto mt-8 px-4">
+    <div class="bg-white shadow rounded overflow-hidden">
+        <table class="min-w-full table-auto">
+            <thead class="bg-indigo-600 text-white">
+                <tr>
+                    <th class="px-4 py-2 text-left">#</th>
+                    <th class="px-4 py-2 text-left">Amount</th>
+                    <th class="px-4 py-2 text-left">Months</th>
+                    <th class="px-4 py-2 text-left">Reason</th>
+                    <th class="px-4 py-2 text-left">Status</th>
+                    <th class="px-4 py-2 text-left">Applied On</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for loan in loans %}
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="px-4 py-2">{{ forloop.counter }}</td>
+                    <td class="px-4 py-2">{{ loan.amount|floatformat:2 }}</td>
+                    <td class="px-4 py-2">{{ loan.months }}</td>
+                    <td class="px-4 py-2">{{ loan.reason|truncatechars:30 }}</td>
+                    <td class="px-4 py-2">
+                        {% if loan.status == "Approved" %}
+                            <span class="bg-green-100 text-green-800 font-semibold px-2 py-1 rounded">{{ loan.status }}</span>
+                        {% elif loan.status == "Pending" %}
+                            <span class="bg-yellow-100 text-yellow-800 font-semibold px-2 py-1 rounded">{{ loan.status }}</span>
+                        {% else %}
+                            <span class="bg-red-100 text-red-800 font-semibold px-2 py-1 rounded">{{ loan.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-2">{{ loan.created_at|date:"d M Y" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-4 text-gray-500">No loans applied yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</body>
+
+{% endblock %}

@@ -3,15 +3,18 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static 
 from django.contrib.auth import views as auth_views
-
+from core.views import home
 urlpatterns = [
     path('admin/', admin.site.urls),
 
     # Auth URLs
     path('sign-in/', auth_views.LoginView.as_view(template_name='users/sign_in.html'), name='sign-in'),
     
-    # App URLs
-    path('', include('tasks.urls')),
+    # App URLs 
+    path('',home,name='home'),
+    path('tasks/', include('tasks.urls')),
+    path('users/', include('users.urls')), 
+    
 ]
 
 # Debug Toolbar only in DEBUG mode

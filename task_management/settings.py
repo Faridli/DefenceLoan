@@ -34,13 +34,17 @@ INSTALLED_APPS = [
 
     # Local apps
     'tasks',    
+    'users',    
+    'core',    
 ]
+
 
 
 # =======================
 # Custom User Model
 # =======================
 AUTH_USER_MODEL = 'tasks.User'  # 'tasks' হলো আপনার app name, 'User' হলো model name
+# AUTH_USER_MODEL = 'users.User'
 
 
 # =======================

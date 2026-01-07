@@ -8,12 +8,13 @@ from .models import LoanApplication, OTPVerification, UserDevice, UserVerificati
 from .forms import UserRegisterForm
 import random, json, uuid, requests
 from datetime import timedelta
-
-def home(request):
-    return redirect('dashboard')
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from .models import LoanApplication
+
+
+def home(request):
+    return redirect('dashboard')
 
 @login_required
 def dashboard(request):
@@ -23,6 +24,24 @@ def dashboard(request):
         'loans': loans
     })
 
+
+# লোন ড্যাশবোর্ড
+@login_required
+def dashboard(request):
+    loans = LoanApplication.objects.filter(user=request.user)
+    total = loans.count()
+    approved = loans.filter(status='Approved').count()
+    pending = loans.filter(status='Pending').count()
+    rejected = loans.filter(status='Rejected').count()
+
+    context = {
+        'loans': loans,
+        'total': total,
+        'approved': approved,
+        'pending': pending,
+        'rejected': rejected
+    }
+    return render(request, 'admin/dashboard.html', context)
 import json
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
@@ -146,3 +165,5 @@ def register(request):
     else:
         form = UserRegisterForm()
     return render(request, 'loans/register.html', {'form': form})
+
+
