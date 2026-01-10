@@ -5,7 +5,8 @@ from . import views
 
 urlpatterns = [
     path('', views.home),
-    path('dashboard/', views.dashboard, name='dashboard'),
+    path('dashboard-user/', views.dashboard_user, name='dashboard_user'), 
+    path('dashboard-admin/', views.Admin_dashboard, name='dashboard-admin'),
     path('apply-loan/', views.apply_loan, name='apply_loan'),
     path('send-otp/', views.send_otp, name='send_otp'),
     path('verify-otp/', views.verify_otp, name='verify_otp'),
@@ -14,7 +15,9 @@ urlpatterns = [
     path('payment-success/', TemplateView.as_view(template_name='loans/payment_success.html')),
     path('payment-fail/', TemplateView.as_view(template_name='loans/payment_fail.html')),
     path('payment-cancel/', TemplateView.as_view(template_name='loans/payment_fail.html')),
-    path('register/', views.register, name='register'), 
+    path('profile/update/', views.profile_update, name='profile_update'),
+    path('form/', views.profile_form, name='profile_form'), 
+    path('kyc_upload/', views.kyc_upload, name='kyc_upload'), 
 
     path('logout/', auth_views.LogoutView.as_view(template_name='users/logout.html'), name='logout'),
 

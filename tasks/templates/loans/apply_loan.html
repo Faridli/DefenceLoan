@@ -1,37 +1,70 @@
 {% extends "base.html" %}
+
 {% block content %}
-<h1 class="text-2xl font-bold mb-4">Apply for Loan</h1>
+<div class="bg-emerald-50 max-w-4xl mx-auto mt-8 p-6 bg-white shadow-md rounded">
+    <h1 class="text-2xl font-bold mb-4 text-center">Demand Money </h1>
 
-{% if error %}
-<p class="text-red-600 mb-2">{{ error }}</p>
-{% endif %}
+    {% if error %}
+    <p class="text-red-600 mb-4 text-center font-semibold">{{ error }}</p>
+    {% endif %}
 
-<form method="POST">
-    {% csrf_token %}
-    <div class="mb-2">
-        <label>Amount (BDT)</label>
-        <input type="number" name="amount" class="border p-1 w-full" required>
-    </div>
-    <div class="mb-2">
-        <label>Months</label>
-        <input type="number" name="months" class="border p-1 w-full" required>
-    </div>
-    <div class="mb-2">
-        <label>Purpose</label>
-        <textarea name="purpose" class="border p-1 w-full"></textarea>
-    </div>
-    <div class="mb-2">
-        <label>Basic Salary</label>
-        <input type="number" name="basic_salary" class="border p-1 w-full">
-    </div>
-    <div class="mb-2">
-        <label>Salary Account Number</label>
-        <input type="text" name="salary_account_number" class="border p-1 w-full">
-    </div>
-    <div class="mb-2">
-        <label>Previous Loans (JSON)</label>
-        <textarea name="previous_loans" class="border p-1 w-full"></textarea>
-    </div>
-    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Submit</button>
-</form>
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- Amount -->
+        <div class="mb-4">
+            <label class="block font-medium mb-1">Need Amount (BDT)</label>
+            <input type="number" name="amount" class="border-2 border-blue-400 p-2 w-full rounded" required>
+        </div>
+
+        <!-- Monthly Installment -->
+        <div class="mb-4">
+            <label class="block font-medium mb-1">Monthly Installment paid</label>
+            <input type="number" name="months" class="border-2 border-blue-400 p-2 w-full rounded" required>
+        </div>
+
+        <!-- Purpose -->
+        <div class="mb-4">
+            <label class="block font-medium mb-1">Purpose</label>
+            <textarea name="purpose" class="border-2 border-blue-400 p-2 w-full rounded" rows="3"></textarea>
+        </div>
+
+        <!-- Basic Salary -->
+        <div class="mb-4">
+            <label class="block font-medium mb-1">Present Basic of Salary</label>
+            <input type="number" name="basic_salary" class="border-2 border-blue-400 p-2 w-full rounded">
+        </div>
+
+        <!-- Bank Name -->
+        <div class="mb-4">
+            <label class="block font-medium mb-1">Bank Name</label>
+            <input type="text" name="bank_name" class="border-2 border-blue-400 p-2 w-full rounded">
+        </div>
+
+        <!-- Salary Account Number -->
+        <div class="mb-4">
+            <label class="block font-medium mb-1">Salary Account Number</label>
+            <input type="text" name="salary_account_number" class="border-2 border-blue-400 p-2 w-full rounded">
+        </div>
+
+        <!-- Previous Loans -->
+        <div class="mb-4">
+            <label class="block font-medium mb-1">Previous Loans (JSON)</label>
+            <textarea name="previous_loans" class="border-2 border-blue-400 p-2 w-full rounded" rows="3" placeholder='[{"amount":5000,"status":"Paid"}]'></textarea>
+        </div> 
+
+        <!-- Salary Certificate / Payslip -->
+        <div class="mb-4">
+            <label class="block font-medium mb-1">Salary Certificate /Payslip /iBAS++ (PDF, JPG, PNG, JPEG)</label>
+            <input type="file" name="salary_certificate" accept=".pdf,.jpg,.jpeg,.png" class="border p-2 w-full rounded">
+        </div>
+
+        <!-- Submit Button -->
+        <div class="text-center"> 
+            <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition w-full font-semibold">
+                Save and Continue
+            </button>
+        </div>
+    </form>
+</div>
 {% endblock %}

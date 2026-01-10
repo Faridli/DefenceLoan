@@ -6,7 +6,7 @@ from tasks.models import User
 # =========================
 # Base CSS Classes
 # =========================
-base_classes = "w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring"
+base_classes = "w-full px-4 py-2 border-2 border-blue-300 rounded-lg focus:outline-none focus:ring"
 
 # ==================================================
 # 🔐 Forgot Password Form
@@ -90,44 +90,9 @@ class UserRegisterForm(forms.ModelForm):
         required=False
     )
 
-    # 🔹 Personal Info
-    phone = forms.CharField(
-        label="Phone Number",
-        widget=forms.TextInput(attrs={"class": base_classes})
-    )
-    birth_date = forms.DateField(
-        label="Birth Date",
-        widget=forms.DateInput(attrs={"type": "date", "class": base_classes})
-    )
-    spouse_name = forms.CharField(
-        label="Spouse Name",
-        required=False,
-        widget=forms.TextInput(attrs={"class": base_classes})
-    )
-    spouse_nid = forms.CharField(
-        label="Spouse NID",
-        required=False,
-        widget=forms.TextInput(attrs={"class": base_classes})
-    )
-
-    # 🔹 Documents
-    national_id = forms.FileField(label="National ID", required=False)
-    service_id_card = forms.FileField(label="Service ID Card", required=False)
-    live_photo = forms.ImageField(label="Live Photo", required=False)
-
     class Meta:
         model = User
-        fields = [
-            'username',
-            'email',
-            'phone',
-            'birth_date',
-            'spouse_name',
-            'spouse_nid',
-            'national_id',
-            'service_id_card',
-            'live_photo',
-        ]
+        fields = ['username','email']
 
     # =========================
     # Validations
@@ -184,8 +149,8 @@ class UserRegisterForm(forms.ModelForm):
             user.password = make_password(password)
         if commit:
             user.save()
-        return user
-
+        return user 
+    
 
 
 # class AssignRoleForm(forms.Form):

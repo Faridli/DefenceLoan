@@ -4,31 +4,33 @@ from django.utils import timezone
 from django.conf import settings
 from django.core.mail import send_mail
 from django.http import JsonResponse
-from .models import LoanApplication, OTPVerification, UserDevice, UserVerification
+from .models import LoanApplication,LoanAdmin, OTPVerification, UserDevice, UserVerification
 from .forms import UserRegisterForm
 import random, json, uuid, requests
 from datetime import timedelta
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from .models import LoanApplication
-
+from django.views.decorators.cache import never_cache
 
 def home(request):
     return redirect('dashboard')
 
+@never_cache
 @login_required
-def dashboard(request):
+def dashboard_user(request):
     loans = LoanApplication.objects.filter(user=request.user).order_by('-id')
 
-    return render(request, 'loans/dashboard.html', {
+    return render(request, 'loans/dashboard_user.html', {
         'loans': loans
     })
 
 
-# লোন ড্যাশবোর্ড
+# লোন ড্যাশবোর্ড 
+@never_cache
 @login_required
-def dashboard(request):
-    loans = LoanApplication.objects.filter(user=request.user)
+def Admin_dashboard(request):
+    loans = LoanAdmin.objects.filter(user=request.user)
     total = loans.count()
     approved = loans.filter(status='Approved').count()
     pending = loans.filter(status='Pending').count()
@@ -42,12 +44,7 @@ def dashboard(request):
         'rejected': rejected
     }
     return render(request, 'admin/dashboard.html', context)
-import json
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-from .models import LoanApplication
 
-@login_required
 @login_required
 def apply_loan(request):
     if request.method == 'POST':
@@ -55,15 +52,18 @@ def apply_loan(request):
         months = request.POST.get('months')
         purpose = request.POST.get('purpose')
         basic_salary = request.POST.get('basic_salary')
+        bank_name = request.POST.get('bank_name')
         salary_account = request.POST.get('salary_account_number')
         previous_loans = request.POST.get('previous_loans')
+        salary_file = request.FILES.get('salary_certificate')
 
+        # Validation
         if not amount or not months:
             return render(request, 'loans/apply_loan.html', {
                 'error': 'Amount & Months are required'
             })
 
-        # ✅ JSON safe handling
+        # Convert previous_loans JSON safely
         previous_loans_value = None
         if previous_loans and previous_loans.lower() != 'no':
             try:
@@ -71,17 +71,21 @@ def apply_loan(request):
             except json.JSONDecodeError:
                 previous_loans_value = None
 
-        LoanApplication.objects.create(
+        # LoanApplication save
+        loan = LoanApplication.objects.create(
             user=request.user,
             amount=amount,
-            months=months,
+            monthly_installment=months,
             purpose=purpose,
             basic_salary=basic_salary or None,
+            bank_name=bank_name or None,
             salary_account_number=salary_account or None,
-            previous_loans=previous_loans_value
+            previous_loans=previous_loans_value,
+            salary_certificate=salary_file if salary_file else None
         )
 
-        return redirect('dashboard')
+        # 🔹 Redirect to bank_verify after saving
+        return redirect('bank_verify')
 
     return render(request, 'loans/apply_loan.html')
 
@@ -148,22 +152,118 @@ def ssl_payment(request, loan_id):
     response = requests.post(settings.SSLCOMMERZ_URL, data=data)
     return redirect(response.json()['GatewayPageURL'])
 
-def register(request):
+# def register(request):
+#     if request.method == 'POST':
+#         form = UserRegisterForm(request.POST, request.FILES)
+#         if form.is_valid():
+#             user = form.save()
+#             UserVerification.objects.create(
+#                 user=user,
+#                 nid_image=form.cleaned_data['national_id'],
+#                 service_id_image=form.cleaned_data['service_id_card'],
+#                 live_photo=form.cleaned_data['live_photo']
+#             )
+#             from django.contrib.auth import login
+#             login(request, user)
+#             return redirect('dashboard')
+#     else:
+#         form = UserRegisterForm()
+#     return render(request, 'loans/register.html', {'form': form})
+
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from .forms import UserProfileForm  # আপনার ফর্ম ইম্পোর্ট
+# # @login_required
+# def profile_view(request):
+#     return render(request, 'loans/', {
+#         'user': request.user
+#     })
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from .forms import UserProfileForm
+# @login_required 
+@login_required
+def profile_form(request):
+    user = request.user
+
     if request.method == 'POST':
-        form = UserRegisterForm(request.POST, request.FILES)
+        form = UserProfileForm(request.POST, request.FILES, instance=user)
         if form.is_valid():
-            user = form.save()
-            UserVerification.objects.create(
-                user=user,
-                nid_image=form.cleaned_data['national_id'],
-                service_id_image=form.cleaned_data['service_id_card'],
-                live_photo=form.cleaned_data['live_photo']
-            )
-            from django.contrib.auth import login
-            login(request, user)
-            return redirect('dashboard')
+            action = request.POST.get('action')  # কোন বাটন ক্লিক হলো
+            if action == 'save':
+                form.save()
+                messages.success(request, "Profile saved successfully!")
+                return redirect('kyc_upload')  # Save হলে kyc_upload এ
+            elif action == 'edit':
+                return redirect('profile_update')  # Edit হলে profile_update এ
     else:
-        form = UserRegisterForm()
-    return render(request, 'loans/register.html', {'form': form})
+        form = UserProfileForm(instance=user)
+
+    return render(request, 'loans/profile_form.html', {'form': form})
 
 
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .forms import UserProfileForm
+
+@login_required
+def profile_update(request):
+    user = request.user
+
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST, request.FILES, instance=user)
+        if form.is_valid():
+            form.save()
+            return redirect('profile_view')
+    else:
+        form = UserProfileForm(instance=user)
+
+    return render(request, 'loans/profile_update.html', {
+        'form': form
+    })
+
+
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from .forms import UserKycForm
+
+
+@login_required
+def kyc_upload(request):
+    user = request.user
+
+    if request.method == 'POST':
+        form = UserKycForm(request.POST, request.FILES, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Documents uploaded successfully ✅")
+            # 🔹 Redirect to apply_loan after saving
+            return redirect('apply_loan')
+        else:
+            messages.error(request, "Please fix the errors below ❌")
+    else:
+        form = UserKycForm(instance=user)
+
+    return render(request, 'loans/kyc_upload.html', {
+        'form': form
+    })
+
+
+
+# @login_required
+# def profile_update(request):
+#     if request.method == 'POST':
+#         form = UserProfileForm(request.POST, request.FILES, instance=request.user)
+#         if form.is_valid():
+#             form.save()
+#             messages.success(request, "Profile updated successfully")
+#             return redirect('profile')
+#     else:
+#         form = UserProfileForm(instance=request.user)
+
+#     return render(request, 'profile.html', {'form': form})

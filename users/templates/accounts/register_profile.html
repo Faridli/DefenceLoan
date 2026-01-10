@@ -1,37 +1,66 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="min-h-screen flex items-center justify-center bg-gray-100">
-<div class="w-full max-w-3xl bg-white shadow-lg rounded-xl p-8">
+<div class="min-h-screen bg-gradient-to-br from-indigo-100 via-white to-indigo-50 flex items-center justify-center py-10">
 
-    <h2 class="text-3xl font-bold text-indigo-600 mb-6">
-        Complete Your Profile
-    </h2>
+    <div class="w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden">
 
-    <form method="POST" enctype="multipart/form-data" class="space-y-6">
-        {% csrf_token %}
-
-        <h3 class="text-xl font-semibold border-b pb-1">Personal Information</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {{ form.phone }}
-            {{ form.birth_date }}
-            {{ form.spouse_name }}
-            {{ form.spouse_nid }}
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-10 text-center">
+            <h2 class="text-4xl font-bold mb-2">📄 Loan Document Submission</h2>
+            <p class="text-indigo-100">Complete the steps below to submit your loan application</p>
         </div>
 
-        <h3 class="text-xl font-semibold border-b pb-1 mt-4">Documents</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {{ form.national_id }}
-            {{ form.service_id_card }}
-            {{ form.live_photo }}
+        <!-- Steps -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 p-10 bg-gray-50">
+
+            <!-- Step 1 -->
+            <a href="#" class="group bg-white rounded-xl shadow-md p-6 border hover:border-indigo-500 hover:shadow-xl transition">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl font-bold">1</span>
+                    <span class="text-green-500 text-sm font-semibold">Start</span>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 group-hover:text-indigo-600">Personal Information</h3>
+                <p class="text-gray-500 mt-2">Name, address, phone, NID details</p>
+            </a>
+
+            <!-- Step 2 -->
+            <div class="bg-white rounded-xl shadow-md p-6 border border-dashed text-gray-400">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="w-12 h-12 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center text-xl font-bold">2</span>
+                    <span class="text-xs">Locked</span>
+                </div>
+                <h3 class="text-xl font-semibold">Document Upload</h3>
+                <p class="mt-2">NID, photo, income proof</p>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="bg-white rounded-xl shadow-md p-6 border border-dashed text-gray-400">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="w-12 h-12 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center text-xl font-bold">3</span>
+                    <span class="text-xs">Locked</span>
+                </div>
+                <h3 class="text-xl font-semibold">Final Review</h3>
+                <p class="mt-2">Submit & track approval</p>
+            </div>
+
         </div>
 
-        <button class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold">
-            Save Profile
-        </button>
-    </form>
+        <!-- CTA -->
+        <div class="bg-white p-10 text-center">
+            <a href="{% url 'profile_form' %}"
+               class="inline-flex items-center justify-center px-10 py-4 text-lg font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full shadow-lg hover:scale-105 transition transform">
+                Start Application →
+            </a>
 
-</div>
+            <p class="text-gray-500 mt-4 text-sm">
+                🔒 Your information is 100% secure and encrypted 
+                <span>(আপনার সব তথ্য সম্পূর্ণ নিরাপদ ও সুরক্ষিতভাবে সংরক্ষণ করা হয়)</span>
+            </p>
+        </div>
+
+    </div>
+
 </div>
 
 {% endblock %}

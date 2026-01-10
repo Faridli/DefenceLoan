@@ -154,7 +154,7 @@ SSLCOMMERZ_URL = config('SSLCOMMERZ_URL')
 
 
 # login এর জন্য URL ঠিক করুন
-LOGIN_URL = 'sign-in'        # এখানে আমরা urls.py তে নাম ব্যবহার করব
+LOGIN_URL = 'login_user'        # এখানে আমরা urls.py তে নাম ব্যবহার করব
 LOGIN_REDIRECT_URL = '/tasks/dashboard/'  # লগইন হয়ে গেলে কোথায় যাবে
 LOGOUT_REDIRECT_URL = '/logout/'         # লগআউট হলে কোথায় যাবে
 

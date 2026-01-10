@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="bg-emerald-50 max-w-3xl mx-auto mt-1 p-6 bg-white shadow-md rounded">
+    <h1 class="text-2xl font-bold mb-4 text-center">Recipient ‍Account</h1>
+
+    {% if error %}
+    <p class="text-red-600 mb-4 text-center font-semibold">{{ error }}</p>
+    {% endif %} 
+
+    {% if message %}
+        <p class="text-green-600 mb-4 text-center font-semibold">{{ message }}</p>
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="mb-4">
+            <label class="block font-medium mb-1">Bank</label>
+            <input type="text" name="bank_name" class="border-2 border-green-300 p-2 w-full rounded" required>
+        </div>
+        <div class="mb-4">
+            <label class="block font-medium mb-1">Account Name</label>
+            <input type="text" name="account_name" class="border-2 border-green-300 p-2 w-full rounded" required>
+        </div>
+
+        <div class="mb-4">
+            <label class="block font-medium mb-1">Account Number</label>
+            <input type="text" name="account_number" class="border-2 border-green-300 p-2 w-full rounded" required>
+        </div>
+
+        <div class="mb-4">
+            <label class="block font-medium mb-1">Routing Number</label>
+            <input type="text" name="routing_number" class="border-2 border-green-300 p-2 w-full rounded" required>
+        </div>
+
+        <div class="mb-4">
+            <label class="inline-flex items-start">
+                <input type="checkbox" name="declaration" class="mr-2 mt-1" required>
+                <span>
+                    আমি স্বজ্ঞানে স্বইছায় এই তথ্য সঠিকভাব সাবমিট করিয়া উক্ত লোনের জন্য আবেদন করি, 
+                    আমার আপলোডকৃত তথ্যে কোনো প্রকার ভুল নাই। কোনো তথ্য ভুল বলে প্রমাণ হলে 
+                    বাংলাদেশ দন্ডবিধি আইন অনুযায়ী যে কোনো শাস্তি আমি মাথা পেতে নিতে রাজি আছি।
+                </span>
+            </label>
+        </div>
+
+        <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+        Confirm & Submit
+        </button>
+
+    </form>
+</div>
+{% endblock %} 
+

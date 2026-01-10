@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Logged Out | Loan App{% endblock %}
+
+{% block content %}
+
+<div class="min-h-screen bg-gradient-to-br from-indigo-100 via-white to-indigo-50 flex items-center justify-center">
+
+    <div class="bg-white shadow-2xl rounded-3xl p-10 max-w-md w-full text-center">
+
+        <!-- Success Icon -->
+        <div class="flex justify-center mb-6">
+            <div class="w-20 h-20 flex items-center justify-center rounded-full bg-green-100 text-green-600 text-4xl shadow-md">
+                ✅
+            </div>
+        </div>
+
+        <!-- Message -->
+        <h2 class="text-3xl font-bold text-gray-800 mb-3">
+             You have successfully logged out
+        </h2>
+        <p class="text-gray-500 mb-8">
+            Your account has been safely logged out
+        </p>
+
+        <!-- Buttons -->
+        <div class="flex flex-col space-y-4">
+
+            <a href="{% url 'home' %}"
+               class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-full font-semibold shadow-lg hover:scale-105 transition transform">
+                Go to Home Page
+            </a>
+
+            <a href="{% url 'login_user' %}"
+               class="w-full border border-gray-300 py-3 rounded-full font-semibold text-gray-700 hover:bg-gray-100 transition">
+                Sign in Again
+            </a>
+
+        </div>
+
+        <p class="text-xs text-gray-400 mt-6">
+            🔒 Your information is completely safe
+        </p>
+
+    </div>
+
+</div>
+
+{% endblock %}

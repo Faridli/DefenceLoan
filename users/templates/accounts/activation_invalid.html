@@ -1,0 +1,29 @@
+<!-- templates/accounts/activation_invalid.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activation Invalid</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+    <div class="bg-white shadow-lg rounded-xl p-8 max-w-md text-center">
+        <h1 class="text-3xl font-bold text-red-600 mb-4">Invalid Link</h1>
+        <p class="text-gray-700 mb-6">
+            Sorry, this activation link is invalid or has expired.
+        </p>
+        <a href="{% url 'register_account' %}" 
+           class="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+           Register Again
+        </a>
+        <br><br>
+        <a href="{% url 'login_user' %}" 
+           class="inline-block text-blue-600 hover:underline">
+           Go to Login
+        </a>
+    </div>
+
+</body>
+</html>

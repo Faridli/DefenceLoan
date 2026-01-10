@@ -3,15 +3,17 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static 
 from django.contrib.auth import views as auth_views
-from core.views import home
+from core.views import home,homebase,logout_view
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    # Auth URLs
-    path('sign-in/', auth_views.LoginView.as_view(template_name='users/sign_in.html'), name='sign-in'),
+    # # Auth URLs
+    # path('sign-in/', auth_views.LoginView.as_view(template_name='users/sign_in.html'), name='sign-in'),
     
     # App URLs 
     path('',home,name='home'),
+    path('homebase',homebase,name='homebase'),
+    path('logout_home/',logout_view, name='logout_home'),
     path('tasks/', include('tasks.urls')),
     path('users/', include('users.urls')), 
     
