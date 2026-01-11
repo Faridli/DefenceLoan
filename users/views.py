@@ -118,6 +118,17 @@ def register_profile(request):
 
     return render(request, 'accounts/register_profile.html', {'form': form})
 
+
+
+from django.shortcuts import render, redirect
+from django.contrib.auth import get_user_model
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from .forms import ForgotPasswordForm, ResetPasswordForm
+
+User = get_user_model()
+
+
 # =========================
 # 🔐 Forgot Password
 # =========================
@@ -125,35 +136,59 @@ def forgot_password(request):
     if request.method == 'POST':
         form = ForgotPasswordForm(request.POST)
         if form.is_valid():
-            request.session['reset_email'] = form.cleaned_data['email']
-            return redirect('reset_password')
+            email = form.cleaned_data['email']
+
+            try:
+                user = User.objects.get(email=email)
+                # Session এ রাখুন
+                request.session['reset_email'] = email
+                messages.success(request, 'Password reset link ready! Proceed to reset.')
+                return redirect('reset_password')
+
+            except User.DoesNotExist:
+                messages.error(request, 'No user found with this email.')
+
     else:
         form = ForgotPasswordForm()
 
     return render(request, 'accounts/forgot_password.html', {'form': form})
+
 
 # =========================
 # 🔁 Reset Password
 # =========================
 def reset_password(request):
     email = request.session.get('reset_email')
+
     if not email:
+        messages.error(request, "Reset link invalid or expired. Please try again.")
         return redirect('forgot_password')
 
-    user = User.objects.get(email=email)
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        messages.error(request, "User not found. Please try again.")
+        return redirect('forgot_password')
 
     if request.method == 'POST':
         form = ResetPasswordForm(request.POST)
         if form.is_valid():
-            user.set_password(form.cleaned_data['password'])
-            user.save()
-            del request.session['reset_email']
-            return redirect('login')
+            password = form.cleaned_data['password']
+            confirm_password = form.cleaned_data['confirm_password']
+
+            if password != confirm_password:
+                messages.error(request, "Passwords do not match!")
+            else:
+                user.set_password(password)
+                user.save()
+                messages.success(request, "Password successfully reset! You can now login.")
+                # Session clean up
+                del request.session['reset_email']
+                return redirect('login_user')
     else:
         form = ResetPasswordForm()
 
     return render(request, 'accounts/reset_password.html', {'form': form})
-
 
 
 from django.shortcuts import render, redirect

@@ -153,6 +153,32 @@ class UserRegisterForm(forms.ModelForm):
     
 
 
+from django import forms
+base_classes = "w-full border-2 border-blue-200 p-2 rounded"
+class ForgotPasswordForm(forms.Form):
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={
+            'class': base_classes,
+            'placeholder': 'Enter your registered email'
+        })
+    )
+
+base_classes = "w-full border p-2 rounded"
+class ResetPasswordForm(forms.Form):
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': base_classes,
+            'placeholder': 'New Password'
+        })
+    )
+    confirm_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': 'w-full border p-2 rounded',
+            'placeholder': 'Confirm New Password'
+        })
+    )
+
+
 # class AssignRoleForm(forms.Form):
 #     role = forms.ModelChoiceField(
 #         queryset=Group.objects.all(),
