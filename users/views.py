@@ -17,16 +17,28 @@ from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
 from django.views.decorators.cache import never_cache 
+from tasks.forms import UserProfileForm 
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.sites.shortcuts import get_current_site
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
+from django.contrib.auth.tokens import default_token_generator
 
+from users.forms import UserRegisterForm
+from tasks.models import User
 def register_account(request):
     if request.method == 'POST':
-        form = UserRegisterForm(request.POST, request.FILES)
+        form = UserRegisterForm(request.POST)
+
         if form.is_valid():
-            user = form.save(commit=False)
-            user.is_active = False  # ইউজারকে প্রথমে deactivate রাখো
+            user = form.save(commit=False)   # form already hashed password
+            user.is_active = False
             user.save()
 
-            # Email verification
+            # send activation email
             current_site = get_current_site(request)
             mail_subject = 'Activate your account'
             message = render_to_string('accounts/acc_active_email.html', {
@@ -35,13 +47,14 @@ def register_account(request):
                 'uid': urlsafe_base64_encode(force_bytes(user.pk)),
                 'token': default_token_generator.make_token(user),
             })
-            email = EmailMessage(mail_subject, message, to=[user.email])
-            email.send()
 
-            messages.success(request, 'Please confirm your email to complete registration.')
-            return redirect('login_user')  # Login page
+            EmailMessage(mail_subject, message, to=[user.email]).send()
+
+            messages.success(request, "Check your email to activate account")
+            return redirect('login_user')
     else:
         form = UserRegisterForm()
+
     return render(request, 'accounts/register_account.html', {'form': form})
 
 
@@ -72,7 +85,7 @@ def activate(request, uidb64, token):
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
-@never_cache
+@never_cache 
 def login_account(request):
     if request.method == "POST":
         username = request.POST.get("username")
@@ -83,14 +96,17 @@ def login_account(request):
 
         if user is not None:
             if user.is_active:
-                login(request, user)
+                # login(request, user) 
+                # Session এ user id রাখুন
+                request.session["login_user_id"] = user.id
 
                 # যদি ?next= থাকে, সেখানে যাবে
                 if next_url:
-                    return redirect(next_url)
+                    # return redirect(next_url)
+                    request.session["next_url"] = next_url
 
                 # না থাকলে dashboard এ যাবে
-                return redirect("dashboard_user")
+                return redirect("otp_login")
             else:
                 messages.error(request, "Your account is not activated.")
         else:
@@ -101,12 +117,140 @@ def login_account(request):
     return render(request, "accounts/user_login.html", {"next": next_url})
 
 
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth import login
+from django.utils import timezone
+import random
+
+from tasks.models import User, OTPVerification
+
+
+# =========================
+# Step 1: Phone Login → Send OTP
+# =========================
+@never_cache 
+
+def phone_login(request):
+    if request.method == 'POST':
+        phone = request.POST.get('phone')
+
+        try:
+            # সরাসরি User Model থেকে phone খুঁজুন
+            user = User.objects.get(phone=phone)
+        except User.DoesNotExist:
+            messages.error(request, "This phone number is not correct/registered.")
+            return redirect("dashboard_user")
+
+        # Generate OTP
+        otp = str(random.randint(100000, 999999))
+
+        # OTP save
+        OTPVerification.objects.create(
+            user=user,
+            otp=otp,
+            purpose="login",
+            expires_at=timezone.now() + timezone.timedelta(minutes=2)
+        )
+
+        # এখানে আপনার SMS API বসিয়ে পাঠাতে পারবেন
+        print("LOGIN OTP:", otp)  # Debug purposes
+
+        # Session এ user id রাখুন
+        request.session["login_user_id"] = user.id
+
+        messages.success(request, "OTP sent to your phone.")
+        return redirect("otp_verify")
+
+    return render(request, "otp/otp_login.html")
+
+
+# =========================
+# Step 2: Verify OTP → Login
+# =========================
+@never_cache 
+
+def verify_login_otp(request):
+    if request.method == "POST":
+        otp = request.POST.get("otp")
+        user_id = request.session.get("login_user_id")
+
+        if not user_id:
+            messages.error(request, "Session expired. Please login again.")
+            return redirect("otp_login")
+
+        try:
+            # OTP check: latest, not expired, purpose=login
+            otp_record = OTPVerification.objects.filter(
+                user_id=user_id,
+                otp=otp,
+                purpose="login",
+                is_verified=False,
+                expires_at__gte=timezone.now()
+            ).latest("created_at")
+
+            otp_record.is_verified = True
+            otp_record.save()
+
+            user = otp_record.user
+
+            if not user.is_active:
+                messages.error(request, "Your account is not activated.")
+                return redirect("otp_login")
+
+            # Login
+            login(request, user)
+            messages.success(request, f"Welcome {user.username}!")
+            return redirect("dashboard_user")
+
+        except OTPVerification.DoesNotExist:
+            messages.error(request, "Invalid or expired OTP.")
+            return redirect("verify_otp")
+
+    return render(request, "otp/otp_verify.html")
+
+
+
+
+
+from django.http import JsonResponse
+from django.utils import timezone
+import random
+
+@never_cache
+def resend_login_otp(request):
+    user_id = request.session.get("login_user_id")
+
+    if not user_id:
+        return JsonResponse({"status": "error", "message": "Session expired"}, status=400)
+
+    # পুরানো OTP invalid করে দাও
+    OTPVerification.objects.filter(
+        user_id=user_id,
+        purpose="login",
+        is_verified=False
+    ).update(is_verified=True)
+
+    # নতুন OTP
+    new_otp = str(random.randint(100000, 999999))
+
+    OTPVerification.objects.create(
+        user_id=user_id,
+        otp=new_otp,
+        purpose="login",
+        expires_at=timezone.now() + timezone.timedelta(minutes=1)
+    )
+
+    print("RESENT LOGIN OTP:", new_otp)  # SMS API এখানে বসবে
+
+    return JsonResponse({"status": "success", "message": "OTP resent"})
 
 
 # =========================
 # Browser–1: Register / Update Profile
 # =========================
-@login_required
+@login_required 
+@never_cache 
 def register_profile(request):
     if request.method == 'POST':
         form = UserRegisterForm(request.POST, request.FILES, instance=request.user)
@@ -132,6 +276,7 @@ User = get_user_model()
 # =========================
 # 🔐 Forgot Password
 # =========================
+@never_cache 
 def forgot_password(request):
     if request.method == 'POST':
         form = ForgotPasswordForm(request.POST)
@@ -156,7 +301,8 @@ def forgot_password(request):
 
 # =========================
 # 🔁 Reset Password
-# =========================
+# ========================= 
+@never_cache 
 def reset_password(request):
     email = request.session.get('reset_email')
 
@@ -195,6 +341,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .models import LoanVerification
 
+@never_cache 
 @login_required
 def Recipient_Account(request):
     # Check if already submitted

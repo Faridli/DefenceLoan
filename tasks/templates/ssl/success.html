@@ -1,0 +1,36 @@
+<!-- templates/loans/success.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Payment Successful</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+<div class="container text-center mt-5">
+    <h1 class="text-success">Payment Successful!</h1>
+    <p>Thank you. Your payment has been received.</p>
+    <a href="{% url 'dashboard_user' %}" class="btn btn-primary">Go to Dashboard</a>
+</div>
+</body>
+</html>
+
+
+
+
+
+
+{% comment %} <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sign In</title>
+</head>
+<body>
+    <h2>Login</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Login</button>
+    </form>
+</body>
+</html> {% endcomment %}

@@ -146,6 +146,7 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 FRONTEND_URL = 'http://127.0.0.1:8000' 
 
+# 'https://loan.render'
 
 # SSLCOMMERZ credentials
 SSLCOMMERZ_STORE_ID = config('SSLCOMMERZ_STORE_ID')

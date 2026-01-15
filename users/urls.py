@@ -5,8 +5,13 @@ from django.contrib.auth import views as auth_views
 urlpatterns = [
     # Registration & Login
     path('register/', views.register_account, name='register_user'),
-    path('login-user/', views.login_account, name='login_user'), 
+    path('login-user/', views.login_account, name='login_user'),   
     path('activate/<uidb64>/<token>/', views.activate, name='activate'),  
+
+    #..........otp.........দিয়ে  লগইন
+    path('otp-login/', views.phone_login, name='otp_login'),  
+    path('otp-verify/', views.verify_login_otp, name='otp_verify'), 
+    path("resend-otp/", views.resend_login_otp, name="resend_otp"), 
 
     # Password Reset
     path('forgot-password/', auth_views.PasswordResetView.as_view(
@@ -31,7 +36,7 @@ urlpatterns = [
 
     # User Profile & Bank Verify
     path('profile/', views.register_profile, name='profile'),
-    path('bank-verify/', views.Recipient_Account, name='bank_verify'),
+    path('bank-verify/', views.Recipient_Account, name='bank_verify'), 
 ]
 
 

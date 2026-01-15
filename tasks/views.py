@@ -7,17 +7,23 @@ from django.http import JsonResponse
 from .models import LoanApplication,LoanAdmin, OTPVerification, UserDevice, UserVerification
 from .forms import UserRegisterForm
 import random, json, uuid, requests
+from django.views.decorators.csrf import csrf_exempt
 from datetime import timedelta
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from .models import LoanApplication
 from django.views.decorators.cache import never_cache
+import uuid
+import requests
+from django.shortcuts import get_object_or_404, redirect, render
+from django.conf import settings
+from .models import LoanApplication  # tasks app এর LoanApplication
 
 def home(request):
     return redirect('dashboard')
 
 @never_cache
-@login_required
+# @login_required
 def dashboard_user(request):
     loans = LoanApplication.objects.filter(user=request.user).order_by('-id')
 
@@ -133,24 +139,87 @@ def save_location(request):
         return JsonResponse({'status': 'saved'})
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
+
+import uuid
+import requests
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.conf import settings
+from .models import LoanApplication
+
 @login_required
 def ssl_payment(request, loan_id):
     loan = get_object_or_404(LoanApplication, id=loan_id, user=request.user)
+    
+    # Transaction ID generate
     tran_id = str(uuid.uuid4())
+    loan.tran_id = tran_id
+    loan.save()
+
+    # Payment data
     data = {
         'store_id': settings.SSLCOMMERZ_STORE_ID,
         'store_passwd': settings.SSLCOMMERZ_STORE_PASS,
-        'total_amount': loan.amount,
+        'total_amount': float(loan.monthly_installment),
         'currency': 'BDT',
         'tran_id': tran_id,
-        'success_url': request.build_absolute_uri('/payment-success/'),
-        'fail_url': request.build_absolute_uri('/payment-fail/'),
-        'cancel_url': request.build_absolute_uri('/payment-cancel/'),
-        'cus_name': request.user.username,
-        'cus_phone': request.user.phone,
+        'success_url': request.build_absolute_uri('/tasks/ssl-success/'),
+        'fail_url': request.build_absolute_uri('/tasks/ssl-fail/'),
+        'cancel_url': request.build_absolute_uri('/tasks/ssl-cancel/'),
+        'cus_name': request.user.username or request.user.get_full_name(),
+        'cus_email': request.user.email,
+        'cus_phone': request.user.phone or '01700000000',
     }
+
+    # Request to SSLCommerz (sandbox)
     response = requests.post(settings.SSLCOMMERZ_URL, data=data)
-    return redirect(response.json()['GatewayPageURL'])
+    
+    try:
+        ssl_data = response.json()
+    except ValueError:
+        ssl_data = {}
+
+    print("SSL RESPONSE:", ssl_data)  # Debug
+
+    if ssl_data.get("status") == "SUCCESS" and ssl_data.get("GatewayPageURL"):
+        return redirect(ssl_data["GatewayPageURL"])
+    else:
+        return render(request, "loans/payment_error.html", {
+            "error": ssl_data.get("failedreason", "Payment gateway rejected the request")
+        })
+
+
+
+
+from django.http import HttpResponse
+@csrf_exempt
+def ssl_ipn(request):
+    if request.method == "POST":
+        tran_id = request.POST.get("tran_id")
+        status = request.POST.get("status")
+
+        try:
+            loan = LoanApplication.objects.get(tran_id=tran_id)
+            if status == "VALID":
+                loan.payment_status = "PAID"
+            else:
+                loan.payment_status = "FAILED"
+            loan.save()
+        except LoanApplication.DoesNotExist:
+            pass
+
+    return HttpResponse("OK")
+
+
+@csrf_exempt
+def ssl_success(request):
+    return render(request, "ssl/success.html")
+@csrf_exempt
+def ssl_fail(request):
+    return render(request, "ssl/fail.html")
+@csrf_exempt
+def ssl_cancel(request):
+    return render(request, "ssl/cancel.html")
 
 # def register(request):
 #     if request.method == 'POST':

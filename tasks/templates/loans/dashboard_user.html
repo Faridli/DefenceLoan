@@ -4,15 +4,15 @@
 {% block content %}
 <div class="mb-6 space-x-4">
     <h1 class="text-3xl font-bold text-gray-800 mb-4">Welcome, {{ request.user.username }}</h1>
+
     <a href="{% url 'profile' %}" 
        class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md transition duration-300 shadow">
-       Apply for loan
+       Apply for Loan
     </a> 
-    <!-- 1   register--> 
      
-     <a href="#" 
+    <a href="{% url 'profile' %}" 
        class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md transition duration-300 shadow">
-      pass
+       Credit Loan
     </a> 
 </div>
 
@@ -22,30 +22,54 @@
         <tr class="text-left">
             <th class="p-3 border-b">Amount (BDT)</th>
             <th class="p-3 border-b">Monthly Installment</th>
+            <th class="p-3 border-b">Total Paid</th>
+            <th class="p-3 border-b">Months Paid</th>
             <th class="p-3 border-b">Purpose</th>
             <th class="p-3 border-b">Status</th>
-            <th class="p-3 border-b">Approved</th>
+            <th class="p-3 border-b">Pay</th>
         </tr>
     </thead>
     <tbody>
         {% for loan in loans %}
-        <tr class="hover:bg-gray-50 text-center">
-            <td class="p-3 border-b">{{ loan.amount }}</td>
-            <td class="p-3 border-b">{{ loan.monthly_installment }}</td>
-            <td class="p-3 border-b">{{ loan.purpose|truncatechars:30 }}</td>
-            <td class="text-yellow-800 font-semibold p-3 border-b">{{ loan.status }}</td>
-            <td class="p-3 border-b">
-                {% if loan.status == 'Approved' %}
-                    <a href="{% url 'ssl_payment' loan.id %}" class="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-md transition">Pay Now</a>
-                {% else %}
-                    -
-                {% endif %}
-            </td>
-        </tr>
+            {% with total_paid=loan.total_paid|default_if_none:0 monthly_installment=loan.monthly_installment|default_if_none:1 %}
+            <tr class="hover:bg-lime-100 items-start">
+                <td class="p-3 border-b">{{ loan.amount|default:0 }}</td>
+                <td class="p-3 border-b">{{ monthly_installment }}</td>
+                <td class="p-3 border-b">{{ total_paid }}</td>
+                <td class="p-3 border-b">
+                   {% if monthly_installment > 0 %}
+    {% widthratio total_paid  monthly_installment 1 %}
+{% else %}
+    0
+{% endif %}
+
+                </td>
+                <td class="p-3 border-b">{{ loan.purpose|truncatechars:30 }}</td>
+                <td class="
+                    {% if loan.status == 'Pending' %}
+                        text-yellow-800 font-semibold
+                    {% elif loan.status == 'Approved' %}
+                        text-green-500 hover:bg-green-600 hover:text-white
+                    {% elif loan.status == 'Rejected' %}
+                        text-red-700 font-semibold
+                    {% endif %}
+                    p-3 border-b
+                    ">
+                    {{ loan.status }}
+                </td>
+                <td class="p-3 border-b">
+                    {% if loan.status == 'Approved' and loan.amount|default:0|floatformat:2 > total_paid|floatformat:2 %}
+                        <a href="{% url 'ssl_payment' loan.id %}" class="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-md transition">Pay Now</a>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+            </tr>
+            {% endwith %}
         {% empty %}
-        <tr>
-            <td colspan="5" class="p-3 text-center text-gray-500">No loans yet.</td>
-        </tr>
+            <tr>
+                <td colspan="7" class="p-3 text-center text-gray-500">No loans yet.</td>
+            </tr>
         {% endfor %}
     </tbody>
 </table>

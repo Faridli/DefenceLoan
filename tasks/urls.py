@@ -19,6 +19,13 @@ urlpatterns = [
     path('form/', views.profile_form, name='profile_form'), 
     path('kyc_upload/', views.kyc_upload, name='kyc_upload'), 
 
-    path('logout/', auth_views.LogoutView.as_view(template_name='users/logout.html'), name='logout'),
+    path('logout/', auth_views.LogoutView.as_view(template_name='users/logout.html'), name='logout'), 
+
+
+    path('ssl-payment/<int:loan_id>/', views.ssl_payment, name='ssl_payment'),
+    path('ssl-ipn/', views.ssl_ipn, name='ssl_ipn'),
+    path('ssl-success/', views.ssl_success, name='ssl_success'),
+    path('ssl-fail/', views.ssl_fail, name='ssl_fail'),
+    path('ssl-cancel/', views.ssl_cancel, name='ssl_cancel'),
 
 ]

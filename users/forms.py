@@ -78,7 +78,16 @@ class UserRegisterForm(forms.ModelForm):
     email = forms.EmailField(
         label="Email Address",
         widget=forms.EmailInput(attrs={"class": base_classes})
-    )
+    ) 
+    phone = forms.CharField(
+    label="Phone Number",
+    max_length=11,
+    widget=forms.TextInput(attrs={
+        'class': 'w-full px-4 py-2 border-2 border-blue-200 rounded-lg',
+        'placeholder': '01XXXXXXXXX'
+    })
+)
+
     password = forms.CharField(
         label="Password",
         widget=forms.PasswordInput(attrs={"class": base_classes}),
@@ -92,7 +101,7 @@ class UserRegisterForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ['username','email']
+        fields = ['username','phone','email']
 
     # =========================
     # Validations

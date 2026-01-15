@@ -1,0 +1,36 @@
+{% extends "homebase.html" %}
+{% block content %}
+
+<div class="min-h-screen flex items-center justify-center bg-gray-100">
+    <div class="bg-white shadow-lg rounded-xl p-8 w-full max-w-md">
+        <h2 class="text-2xl font-bold text-center text-indigo-600 mb-6">
+            Login with Phone
+        </h2>
+
+        {% if messages %}
+            {% for message in messages %}
+                <p class="bg-red-100 text-red-700 p-3 rounded mb-4">{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            <label class="block mb-2 font-semibold">Phone_Number</label>
+            <input type="text" name="phone"
+                   placeholder="01XXXXXXXXX"
+                   class="w-full p-3 border-2 border-sky-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                   required>
+
+            <button type="submit"
+                    class="mt-5 w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-bold">
+                Send OTP
+            </button>
+        </form>
+
+        <p class="text-center text-gray-500 mt-4 text-sm">
+            An OTP will be sent to your phone
+        </p>
+    </div>
+</div>
+
+{% endblock %}

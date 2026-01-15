@@ -6,7 +6,7 @@ class UserRegisterForm(UserCreationForm):
     
     class Meta:
         model = User
-        fields = ['username','email','password1','password2']
+        fields = ['username','phone','email','password1','password2']
 
 
 from django.core.exceptions import ValidationError
@@ -52,7 +52,7 @@ class UserProfileForm(forms.ModelForm):
             }),
             'phone': forms.TextInput(attrs={
                 'class': 'w-full px-4 py-2 border-2 border-blue-200 rounded-lg',
-                'placeholder': '11 digit Phone Number'
+                'placeholder': '01XXXXXXXXXXX'
             }),
             'corps': forms.Select(attrs={
                 'class': 'w-full px-4 py-2 border-2 border-blue-200 rounded-lg',
