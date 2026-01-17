@@ -13,7 +13,7 @@ urlpatterns = [
     # App URLs 
     path('',home,name='home'),
     path('homebase',homebase,name='homebase'),
-    path('logout_home/',logout_view, name='logout_home'),
+    path('loan/',logout_view, name='logout_home'),
     path('tasks/', include('tasks.urls')),
     path('users/', include('users.urls')), 
     

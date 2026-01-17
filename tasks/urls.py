@@ -5,7 +5,11 @@ from . import views
 
 urlpatterns = [
     path('', views.home),
-    path('dashboard-user/', views.dashboard_user, name='dashboard_user'), 
+    path('dashboard-user/', views.dashboard_user, name='dashboard_user'),  
+    path('loan-emi/', views.loan_emi, name='loan_emi'),
+    path('loan/<int:loan_id>/emi/', views.emi, name='emi'),
+
+
     path('dashboard-admin/', views.Admin_dashboard, name='dashboard-admin'),
     path('apply-loan/', views.apply_loan, name='apply_loan'),
     path('send-otp/', views.send_otp, name='send_otp'),
@@ -25,6 +29,8 @@ urlpatterns = [
     path('ssl-payment/<int:loan_id>/', views.ssl_payment, name='ssl_payment'),
     path('ssl-ipn/', views.ssl_ipn, name='ssl_ipn'),
     path('ssl-success/', views.ssl_success, name='ssl_success'),
+    path("receipt/<int:loan_id>/", views.receipt_print, name="receipt_print"),
+
     path('ssl-fail/', views.ssl_fail, name='ssl_fail'),
     path('ssl-cancel/', views.ssl_cancel, name='ssl_cancel'),
 

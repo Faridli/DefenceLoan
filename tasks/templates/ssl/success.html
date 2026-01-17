@@ -1,36 +1,54 @@
-<!-- templates/loans/success.html -->
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Payment Successful</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-</head>
-<body class="bg-light">
-<div class="container text-center mt-5">
-    <h1 class="text-success">Payment Successful!</h1>
-    <p>Thank you. Your payment has been received.</p>
-    <a href="{% url 'dashboard_user' %}" class="btn btn-primary">Go to Dashboard</a>
+{% extends "base.html" %}
+{% block title %}Payment Successful{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto mt-10 p-6 bg-green-100 rounded-md shadow">
+
+    <h2 class="text-2xl font-bold text-green-600 mb-4 text-center">
+        Payment Successful ✅
+    </h2>
+
+    <p><strong>Loan ID:</strong> {{ loan.id }}</p>
+    <p><strong>Total Paid:</strong> {{ total_paid|floatformat:2 }} ৳</p>
+    <p><strong>Months Paid:</strong> {{ months_paid }}</p>
+    <p><strong>Remaining Amount:</strong> {{ remaining_amount|floatformat:2 }} ৳</p>
+
+    <div class="mt-6 flex justify-between">
+        <a href="{% url 'dashboard_user' %}"
+           class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+            Back
+        </a>
+
+        <a href="{% url 'receipt_print' loan.id %}"
+           target="_blank"
+           class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+            Print / PDF
+        </a>
+    </div>
 </div>
-</body>
-</html>
+{% endblock %}
 
 
 
 
 
 
-{% comment %} <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Sign In</title>
-</head>
-<body>
-    <h2>Login</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Login</button>
-    </form>
-</body>
-</html> {% endcomment %}
+
+{% comment %} 
+{% extends "base.html" %}
+{% block title %}Payment Successful{% endblock %}
+
+{% block content %}
+<div class="p-6 bg-green-100 rounded-md">
+    <h2 class="text-2xl font-bold text-green-600 mb-4">Payment Successful!</h2>
+
+    <p><strong>Loan ID:</strong> {{ loan.id }}</p>
+    <p><strong>Total Paid:</strong> {{ total_paid }} ৳</p>
+    <p><strong>Months Paid:</strong> {{ months_paid }}</p>
+    <p><strong>Remaining Amount:</strong> {{ remaining_amount }} ৳</p>
+
+    <a href="{% url 'dashboard_user' %}" class="mt-4 inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+        Back
+    </a>
+</div>
+{% endblock %} {% endcomment %}

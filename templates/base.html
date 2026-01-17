@@ -7,12 +7,14 @@
      <title>{% block title %}Loan App{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="icon" href="{% static 'images/favicon.ico' %}" type="image/x-icon">
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Noto+Sans+Bengali:wght@100..900&display=swap"
       rel="stylesheet"
     />
-    <script src="https://cdn.tailwindcss.com"></script>
-   <link href="{% static 'css/output.css' %}" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script> 
+   <link href="{% static 'css/output.css' %}" rel="stylesheet"> 
+   <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
     <style>
       body {
         font-family: "Inter", sans-serif;
@@ -23,7 +25,7 @@
 <body class="bg-gray-100 text-gray-800 min-h-screen flex flex-col">
 
     <!-- ================= Navbar ================= -->
-    <nav class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-lg">
+    <nav class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-lg site-header print-hide">
         <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
 
             <!-- Logo -->
@@ -38,8 +40,8 @@
                         Hi, {{ request.user.username }}
                     </span>
                     
-                    <a href="{% url 'logout_home' %}">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-white hover:text-green-600 transition">
+                    <a href="#">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-yellow-500 hover:text-emerald-600 transition">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
                         </svg>
                     </a>
@@ -66,14 +68,14 @@
     </nav>
 
     <!-- ================= Main Content ================= -->
-    <main class="flex-grow max-w-6xl mx-auto w-full p-6">
+    <main class="flex-grow max-w-6xl mx-auto w-full p-6 print-hide">
         {% block content %}
         {% endblock %}
-    </main>
+    </main class="print-hide">
 
     <!-- ================= Footer ================= -->
     
-    <footer class="bg-gray-900 text-white mt-1/2 relative z-10">
+    <footer class="bg-gray-900 text-white mt-1/2 relative z-10 site-footer print-hide">
     <div class="max-w-7xl mx-auto px-6 py-8 flex flex-col md:flex-row justify-between items-center">
         <!-- Left: Logo / Name -->
         <div class="mb-4 md:mb-0 text-center md:text-left">

@@ -1,0 +1,43 @@
+{% extends "homebase.html" %}
+{% block content %}
+
+<div class="max-w-4xl mx-auto p-6">
+
+    <!-- Loan Calculator -->
+    <div class="bg-white shadow-lg rounded-2xl p-6">
+        <h2 class="text-2xl font-bold text-sky-700 text-center text-gray-800 mb-6">Loan Calculator</h2>
+
+        <form method="get" class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+            <div>
+                <label class="block text-gray-700 font-medium mb-1">Loan Amount (৳)</label>
+                <input type="number" name="amount" value="{{ amount_input }}" step="0.01" 
+                       class="w-full border-2 border-blue-400 border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400 focus:outline-none" 
+                       placeholder="Enter amount">  
+            </div>
+
+            <div>
+                <label class="block text-gray-700 font-medium mb-1">Duration (months)</label>
+                <input type="number" name="duration_months" value="{{ duration_input }}" 
+                       class="w-full border-2 border-blue-400 border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400 focus:outline-none" 
+                       placeholder="Enter duration">
+            </div>
+
+            <div class="md:col-span-2">
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-xl transition duration-300 w-full md:w-auto">
+                    Calculate
+                </button>
+            </div>
+        </form>
+
+        {% if monthly_installment %}
+        <div class="mt-6 bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
+            <p><span class="font-semibold text-gray-800">Total Interest:</span> {{ total_interest|floatformat:2 }} ৳</p>
+            <p><span class="font-semibold text-gray-800">Total Payable:</span> {{ total_payable|floatformat:2 }} ৳</p>
+            <p><span class="font-semibold text-gray-800">Monthly Installment:</span> {{ monthly_installment|floatformat:2 }} ৳</p>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+{% endblock %}

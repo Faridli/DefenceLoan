@@ -3,73 +3,107 @@
 
 {% block content %}
 <div class="mb-6 space-x-4">
-    <h1 class="text-3xl font-bold text-gray-800 mb-4">Welcome, {{ request.user.username }}</h1>
+    <h1 class="text-3xl font-bold text-gray-800 mb-4">
+        Welcome, {{ request.user.username }}
+    </h1>
 
-    <a href="{% url 'profile' %}" 
-       class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md transition duration-300 shadow">
-       Apply for Loan
-    </a> 
-     
-    <a href="{% url 'profile' %}" 
-       class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md transition duration-300 shadow">
-       Credit Loan
-    </a> 
+    <a href="{% url 'profile' %}"
+       class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md shadow">
+       Apply for General Loan
+    </a>
+    <a href="{% url 'interest_rate' %}"
+       class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md shadow">
+        Calculate General Loan
+    </a>
+
+    <a href="#"
+       class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-md shadow">
+       Applicant for Credit Loan
+    </a>
+    <a href="#"
+       class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-md shadow">
+       All Bill Pay 
+    </a>
 </div>
 
 <h2 class="text-2xl font-semibold mb-4">Your Loans History</h2>
+
 <table class="w-full border border-gray-200 shadow-sm rounded-md overflow-hidden">
     <thead class="bg-green-100">
-        <tr class="text-left">
-            <th class="p-3 border-b">Amount (BDT)</th>
-            <th class="p-3 border-b">Monthly Installment</th>
+        <tr>
+            <th class="p-3 border-b">Loan Amount</th>
+            <th class="p-3 border-b">Interest</th>
+            <th class="p-3 border-b">Total Payable</th>
+            <th class="p-3 border-b">Monthly EMI</th>
             <th class="p-3 border-b">Total Paid</th>
             <th class="p-3 border-b">Months Paid</th>
-            <th class="p-3 border-b">Purpose</th>
+            <th class="p-3 border-b">Remaining</th>
             <th class="p-3 border-b">Status</th>
             <th class="p-3 border-b">Pay</th>
         </tr>
     </thead>
+
     <tbody>
         {% for loan in loans %}
-            {% with total_paid=loan.total_paid|default_if_none:0 monthly_installment=loan.monthly_installment|default_if_none:1 %}
-            <tr class="hover:bg-lime-100 items-start">
-                <td class="p-3 border-b">{{ loan.amount|default:0 }}</td>
-                <td class="p-3 border-b">{{ monthly_installment }}</td>
-                <td class="p-3 border-b">{{ total_paid }}</td>
-                <td class="p-3 border-b">
-                   {% if monthly_installment > 0 %}
-    {% widthratio total_paid  monthly_installment 1 %}
-{% else %}
-    0
-{% endif %}
+        <tr class="hover:bg-lime-100">
 
-                </td>
-                <td class="p-3 border-b">{{ loan.purpose|truncatechars:30 }}</td>
-                <td class="
-                    {% if loan.status == 'Pending' %}
-                        text-yellow-800 font-semibold
-                    {% elif loan.status == 'Approved' %}
-                        text-green-500 hover:bg-green-600 hover:text-white
-                    {% elif loan.status == 'Rejected' %}
-                        text-red-700 font-semibold
-                    {% endif %}
-                    p-3 border-b
-                    ">
-                    {{ loan.status }}
-                </td>
-                <td class="p-3 border-b">
-                    {% if loan.status == 'Approved' and loan.amount|default:0|floatformat:2 > total_paid|floatformat:2 %}
-                        <a href="{% url 'ssl_payment' loan.id %}" class="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-md transition">Pay Now</a>
-                    {% else %}
-                        -
-                    {% endif %}
-                </td>
-            </tr>
-            {% endwith %}
+            <td class="p-3 border-b">{{ loan.amount }} ৳</td>
+
+            <td class="p-3 border-b">
+                {{ loan.interest_rate }}% <br>
+                <span class="text-sm text-gray-500">
+                    ({{ loan.total_interest }} ৳)
+                </span>
+            </td>
+
+            <td class="p-3 border-b font-semibold text-blue-700">
+                {{ loan.total_payable }} ৳
+            </td>
+
+            <td class="p-3 border-b">
+                {{ loan.monthly_installment }} ৳
+            </td>
+
+            <td class="p-3 border-b">
+                {{ loan.total_paid }} ৳
+            </td>
+
+            <td class="p-3 border-b">
+                {{ loan.months_paid }}
+            </td>
+
+            <td class="p-3 border-b font-semibold text-red-600">
+                {{ loan.remaining_amount }} ৳
+            </td>
+
+                <td class="px-2 py-1 border-b
+                {% if loan.display_status == 'Pending' %} text-yellow-700
+                {% elif loan.display_status == 'Approved' %} text-green-600 font-semibold
+                {% elif loan.display_status == 'Rejected' %} text-red-600
+                {% elif loan.display_status == 'Cleared' %} text-green-600 font-bold
+                {% endif %}">
+                {{ loan.display_status }}
+            </td>
+
+
+            <td class="p-3 border-b">
+                {% if loan.status == 'Approved' and loan.remaining_amount > 0 %}
+                    <a href="{% url 'ssl_payment' loan.id %}"
+                       class="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-md">
+                        Pay Now
+                    </a>
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+
+        </tr>
         {% empty %}
-            <tr>
-                <td colspan="7" class="p-3 text-center text-gray-500">No loans yet.</td>
-            </tr>
+        <tr>
+            <td colspan="9" class="p-4 text-center text-gray-500">
+                No loans yet.
+            </td>
+        </tr>
         {% endfor %}
     </tbody>
 </table>

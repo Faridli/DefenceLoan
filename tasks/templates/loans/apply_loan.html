@@ -1,70 +1,176 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="bg-emerald-50 max-w-4xl mx-auto mt-8 p-6 bg-white shadow-md rounded">
-    <h1 class="text-2xl font-bold mb-4 text-center">Demand Money </h1>
+<div class="max-w-5xl mx-auto mt-12 px-4">
+
+    <!-- ================= Page Header ================= -->
+    <div class="text-center mb-10">
+        <h1 class="text-4xl font-extrabold text-emerald-700">
+            Calculate your loan & submit your application
+        </h1>
+        <p class="text-gray-500 mt-2">
+            Fill the details below to calculate and apply for your loan
+        </p>
+    </div>
 
     {% if error %}
-    <p class="text-red-600 mb-4 text-center font-semibold">{{ error }}</p>
+        <div class="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl mb-8 text-center font-semibold">
+            {{ error }}
+        </div>
     {% endif %}
 
-    <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-
-        <!-- Amount -->
-        <div class="mb-4">
-            <label class="block font-medium mb-1">Need Amount (BDT)</label>
-            <input type="number" name="amount" class="border-2 border-blue-400 p-2 w-full rounded" required>
+    <!-- ================= STEP 1 : Loan Calculator ================= -->
+    <div class="bg-white shadow-xl rounded-3xl p-8 mb-12 border-4 border-emerald-200 hover:border-emerald-400 transition">
+        <div class="flex items-center gap-3 mb-6">
+            <span class="bg-emerald-600 text-white w-9 h-9 flex items-center justify-center rounded-full font-bold">
+                1
+            </span>
+            <h2 class="text-2xl font-bold text-emerald-700">
+                Loan Calculator
+            </h2>
         </div>
 
-        <!-- Monthly Installment -->
-        <div class="mb-4">
-            <label class="block font-medium mb-1">Monthly Installment paid</label>
-            <input type="number" name="months" class="border-2 border-blue-400 p-2 w-full rounded" required>
+        <form method="get" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">
+                    Loan Amount (৳)
+                </label>
+                <input type="number" name="amount" value="{{ amount_input }}" step="0.01"
+                       class="w-full border-4 border-emerald-200 hover:border-emerald-400 transition rounded-2xl px-5 py-3 focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400"
+                       placeholder="e.g. 50000" required>
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">
+                    Duration (Months)
+                </label>
+                <input type="number" name="duration_months" value="{{ duration_input }}"
+                       class="w-full border-4 border-emerald-200 hover:border-emerald-400 transition rounded-2xl px-5 py-3 focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400"
+                       placeholder="e.g. 12" required>
+            </div>
+
+            <div class="md:col-span-2 text-center mt-2">
+                <button type="submit"
+                        class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-10 py-3 rounded-2xl transition">
+                    Calculate Loan
+                </button>
+            </div>
+        </form>
+
+        {% if monthly_installment %}
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-5 text-center">
+            <div class="bg-emerald-50 p-5 rounded-2xl border-2 border-emerald-200">
+                <p class="text-sm text-gray-500">Total Interest</p>
+                <p class="text-2xl font-bold text-emerald-700">
+                    {{ total_interest|floatformat:2 }} ৳
+                </p>
+            </div>
+            <div class="bg-sky-50 p-5 rounded-2xl border-2 border-sky-200">
+                <p class="text-sm text-gray-500">Total Payable</p>
+                <p class="text-2xl font-bold text-sky-700">
+                    {{ total_payable|floatformat:2 }} ৳
+                </p>
+            </div>
+            <div class="bg-indigo-50 p-5 rounded-2xl border-2 border-indigo-200">
+                <p class="text-sm text-gray-500">Monthly Installment</p>
+                <p class="text-2xl font-bold text-indigo-700">
+                    {{ monthly_installment|floatformat:2 }} ৳
+                </p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    <!-- ================= END STEP 1 ================= -->
+
+    <!-- ================= STEP 2 : Applicant Information ================= -->
+    <div class="bg-white shadow-xl rounded-3xl p-8 border-4 border-blue-200 hover:border-blue-400 transition">
+        <div class="flex items-center gap-3 mb-6">
+            <span class="bg-blue-600 text-white w-9 h-9 flex items-center justify-center rounded-full font-bold">
+                2
+            </span>
+            <h2 class="text-2xl font-bold text-blue-700">
+                Applicant Information
+            </h2>
         </div>
 
-        <!-- Purpose -->
-        <div class="mb-4">
-            <label class="block font-medium mb-1">Purpose</label>
-            <textarea name="purpose" class="border-2 border-blue-400 p-2 w-full rounded" rows="3"></textarea>
-        </div>
+        <form method="POST" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
 
-        <!-- Basic Salary -->
-        <div class="mb-4">
-            <label class="block font-medium mb-1">Present Basic of Salary</label>
-            <input type="number" name="basic_salary" class="border-2 border-blue-400 p-2 w-full rounded">
-        </div>
+            <!-- Purpose -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">
+                    Purpose of Loan
+                </label>
+                <textarea name="purpose" rows="3"
+                          class="w-full border-4 border-blue-200 hover:border-blue-400 transition rounded-2xl px-5 py-3 focus:ring-2 focus:ring-blue-400"
+                          placeholder="Explain why you need this loan" required>{{ request.POST.purpose }}</textarea>
+            </div>
 
-        <!-- Bank Name -->
-        <div class="mb-4">
-            <label class="block font-medium mb-1">Bank Name</label>
-            <input type="text" name="bank_name" class="border-2 border-blue-400 p-2 w-full rounded">
-        </div>
+            <!-- Basic Salary -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">
+                    Present Basic Salary
+                </label>
+                <input type="number" name="basic_salary" value="{{ request.POST.basic_salary }}"
+                       class="w-full border-4 border-blue-200 hover:border-blue-400 transition rounded-2xl px-5 py-3 focus:ring-2 focus:ring-blue-400"
+                       placeholder="e.g. 30000" required>
+            </div>
 
-        <!-- Salary Account Number -->
-        <div class="mb-4">
-            <label class="block font-medium mb-1">Salary Account Number</label>
-            <input type="text" name="salary_account_number" class="border-2 border-blue-400 p-2 w-full rounded">
-        </div>
+            <!-- Account & Bank -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">
+                        Account Name
+                    </label>
+                    <input type="text" name="account_name" value="{{ request.POST.account_name }}"
+                           class="w-full border-4 border-blue-200 hover:border-blue-400 transition rounded-2xl px-5 py-3 focus:ring-2 focus:ring-blue-400" required>
+                </div>
 
-        <!-- Previous Loans -->
-        <div class="mb-4">
-            <label class="block font-medium mb-1">Previous Loans (JSON)</label>
-            <textarea name="previous_loans" class="border-2 border-blue-400 p-2 w-full rounded" rows="3" placeholder='[{"amount":5000,"status":"Paid"}]'></textarea>
-        </div> 
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">
+                        Bank Name
+                    </label>
+                    <input type="text" name="bank_name" value="{{ request.POST.bank_name }}"
+                           class="w-full border-4 border-blue-200 hover:border-blue-400 transition rounded-2xl px-5 py-3 focus:ring-2 focus:ring-blue-400" required>
+                </div>
+            </div>
 
-        <!-- Salary Certificate / Payslip -->
-        <div class="mb-4">
-            <label class="block font-medium mb-1">Salary Certificate /Payslip /iBAS++ (PDF, JPG, PNG, JPEG)</label>
-            <input type="file" name="salary_certificate" accept=".pdf,.jpg,.jpeg,.png" class="border p-2 w-full rounded">
-        </div>
+            <!-- Salary Account -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">
+                    Salary Account Number
+                </label>
+                <input type="text" name="salary_account_number" value="{{ request.POST.salary_account_number }}"
+                       class="w-full border-4 border-blue-200 hover:border-blue-400 transition rounded-2xl px-5 py-3 focus:ring-2 focus:ring-blue-400" required>
+            </div>
 
-        <!-- Submit Button -->
-        <div class="text-center"> 
-            <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition w-full font-semibold">
-                Save and Continue
+            <!-- Previous Loans -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">
+                    Previous Loans (Optional)
+                </label>
+                <textarea name="previous_loans" rows="3"
+                          class="w-full border-4 border-blue-200 hover:border-blue-400 transition rounded-2xl px-5 py-3 focus:ring-2 focus:ring-blue-400"
+                          placeholder='{"amount":5000,"status":"Paid","bank":"ABC Bank"}'>{{ request.POST.previous_loans }}</textarea>
+            </div>
+
+            <!-- Salary Certificate -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">
+                    Upload Salary Certificate
+                </label>
+                <input type="file" name="salary_certificate"
+                       accept=".pdf,.jpg,.jpeg,.png"
+                       class="w-full border-4 border-blue-200 hover:border-blue-400 transition rounded-2xl p-3">
+            </div>
+
+            <button type="submit"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl text-lg transition">
+                Save & Continue
             </button>
-        </div>
-    </form>
+        </form>
+    </div>
+    <!-- ================= END STEP 2 ================= -->
+
 </div>
 {% endblock %}

@@ -36,7 +36,9 @@ urlpatterns = [
 
     # User Profile & Bank Verify
     path('profile/', views.register_profile, name='profile'),
-    path('bank-verify/', views.Recipient_Account, name='bank_verify'), 
+    path('bank-verify/', views.Recipient_Account, name='bank_verify'),  
+
+    path('interest-rate', views.Interest_rate, name='interest_rate'),
 ]
 
 

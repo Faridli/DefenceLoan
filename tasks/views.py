@@ -29,7 +29,51 @@ def dashboard_user(request):
 
     return render(request, 'loans/dashboard_user.html', {
         'loans': loans
-    })
+    }) 
+
+from django.shortcuts import render
+from .models import LoanApplication
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from .models import LoanApplication
+
+def loan_emi(request):
+    # শুধুমাত্র বর্তমান ইউজারের লোনগুলো আনবে
+    loans = LoanApplication.objects.filter(user=request.user).order_by('-id')
+
+    # Safety check, কিন্তু property directly set করবেন না
+    for loan in loans:
+        if loan.total_payable is None:
+            loan.total_payable = 0
+        if loan.total_paid is None:
+            loan.total_paid = 0
+        if loan.monthly_installment is None:
+            loan.monthly_installment = 0
+
+        # এখানে আর set না করে শুধু read করবে
+        loan.remaining = loan.remaining_amount  # template এ use করার জন্য
+        loan.months = loan.months_paid  # template এ use করার জন্য
+
+    context = {
+        "loans": loans
+    }
+    return render(request, "loans/loan_emi.html", context)
+
+
+
+from django.shortcuts import render, get_object_or_404
+from .models import LoanApplication
+
+def emi(request, loan_id):
+    loan = get_object_or_404(LoanApplication, id=loan_id, user=request.user)
+
+    context = {
+        "loan": loan,
+        "months_paid": loan.months_paid(),
+        "months_left": loan.duration_months - loan.months_paid(),
+    }
+
+    return render(request, "loans/emi.html", context)
 
 
 # লোন ড্যাশবোর্ড 
@@ -51,49 +95,101 @@ def Admin_dashboard(request):
     }
     return render(request, 'admin/dashboard.html', context)
 
+
+import json
+from decimal import Decimal
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .models import LoanApplication, InterestRate
+
+from decimal import Decimal
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
+from .models import LoanApplication, InterestRate
+import json
+
 @login_required
 def apply_loan(request):
+    error = None
+    amount_input = request.GET.get('amount') or ''
+    duration_input = request.GET.get('duration_months') or ''
+    monthly_installment = total_payable = total_interest = None
+
+    # ================= Loan Calculator GET =================
+    if request.method == 'GET' and amount_input and duration_input:
+        try:
+            amount = Decimal(amount_input)
+            months = int(duration_input)
+            active_rate = InterestRate.objects.filter(is_active=True).first()
+
+            if not active_rate:
+                error = "No active interest rate is set by admin."
+            else:
+                rate = Decimal(active_rate.rate)
+                yearly_interest = (amount * rate) / Decimal("100")
+                total_interest = (yearly_interest / Decimal("12")) * months
+                total_payable = amount + total_interest
+                monthly_installment = total_payable / months
+        except Exception as e:
+            error = "Invalid input for loan calculation."
+
+    # ================= POST : Save Loan Application =================
     if request.method == 'POST':
-        amount = request.POST.get('amount')
-        months = request.POST.get('months')
         purpose = request.POST.get('purpose')
-        basic_salary = request.POST.get('basic_salary')
-        bank_name = request.POST.get('bank_name')
-        salary_account = request.POST.get('salary_account_number')
-        previous_loans = request.POST.get('previous_loans')
-        salary_file = request.FILES.get('salary_certificate')
+        basic_salary = request.POST.get('basic_salary') or None
+        account_name = request.POST.get('account_name') or None
+        bank_name = request.POST.get('bank_name') or None
+        salary_account_number = request.POST.get('salary_account_number') or None
+        previous_loans = request.POST.get('previous_loans') or None
+        salary_certificate = request.FILES.get('salary_certificate')
 
-        # Validation
-        if not amount or not months:
-            return render(request, 'loans/apply_loan.html', {
-                'error': 'Amount & Months are required'
-            })
+        # amount and duration from GET (calculator)
+        try:
+            amount = Decimal(request.GET.get('amount'))
+            duration_months = int(request.GET.get('duration_months'))
+        except:
+            error = "Amount and Duration are required from Calculator."
 
-        # Convert previous_loans JSON safely
-        previous_loans_value = None
-        if previous_loans and previous_loans.lower() != 'no':
+        if not error:
+            # Convert previous_loans JSON safely
+            previous_loans_value = None
+            if previous_loans and previous_loans.lower() != 'no':
+                try:
+                    previous_loans_value = json.loads(previous_loans)
+                except json.JSONDecodeError:
+                    previous_loans_value = None
+
+            # Create LoanApplication
             try:
-                previous_loans_value = json.loads(previous_loans)
-            except json.JSONDecodeError:
-                previous_loans_value = None
+                loan = LoanApplication.objects.create(
+                    user=request.user,
+                    amount=amount,
+                    duration_months=duration_months,
+                    purpose=purpose,
+                    basic_salary=basic_salary,
+                    account_name=account_name,
+                    bank_name=bank_name,
+                    salary_account_number=salary_account_number,
+                    previous_loans=previous_loans_value,
+                    salary_certificate=salary_certificate
+                )
+                print("Loan saved, redirecting to bank_verify...")
+                return redirect('bank_verify')  # এখানে আপনার পরবর্তী page
+            except ValidationError as e:
+                error = e 
+                print("ValidationError:", e)
 
-        # LoanApplication save
-        loan = LoanApplication.objects.create(
-            user=request.user,
-            amount=amount,
-            monthly_installment=months,
-            purpose=purpose,
-            basic_salary=basic_salary or None,
-            bank_name=bank_name or None,
-            salary_account_number=salary_account or None,
-            previous_loans=previous_loans_value,
-            salary_certificate=salary_file if salary_file else None
-        )
+    context = {
+        'error': error,
+        'amount_input': amount_input,
+        'duration_input': duration_input,
+        'monthly_installment': monthly_installment,
+        'total_payable': total_payable,
+        'total_interest': total_interest
+    }
 
-        # 🔹 Redirect to bank_verify after saving
-        return redirect('bank_verify')
-
-    return render(request, 'loans/apply_loan.html')
+    return render(request, 'loans/apply_loan.html', context)
 
 
 
@@ -190,30 +286,116 @@ def ssl_payment(request, loan_id):
 
 
 
-
 from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from decimal import Decimal
+from .models import LoanApplication
+
 @csrf_exempt
 def ssl_ipn(request):
     if request.method == "POST":
         tran_id = request.POST.get("tran_id")
         status = request.POST.get("status")
+        paid_amount = request.POST.get("amount")
 
         try:
             loan = LoanApplication.objects.get(tran_id=tran_id)
-            if status == "VALID":
+            
+            if status == "VALID" and paid_amount:
+                loan.total_paid = (loan.total_paid or Decimal("0.00")) + Decimal(paid_amount)
                 loan.payment_status = "PAID"
-            else:
+                loan.save()
+            
+            elif status != "VALID":
                 loan.payment_status = "FAILED"
-            loan.save()
+                loan.save()
+
         except LoanApplication.DoesNotExist:
             pass
 
     return HttpResponse("OK")
 
+from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from xhtml2pdf import pisa
+from decimal import Decimal
+from .models import LoanApplication
+from decimal import Decimal
+from django.shortcuts import render, get_object_or_404
+from .models import LoanApplication
 
+from decimal import Decimal
+from django.db import transaction
+from decimal import Decimal
+from django.db import transaction
+
+from decimal import Decimal
+from django.db import transaction
+from django.utils import timezone
 @csrf_exempt
 def ssl_success(request):
-    return render(request, "ssl/success.html")
+    tran_id = request.POST.get("tran_id")
+    amount = Decimal(request.POST.get("amount", "0.00"))
+
+    loan = LoanApplication.objects.filter(tran_id=tran_id).first()
+    if not loan:
+        return render(request, "ssl/error.html", {"error": "Loan not found"})
+
+    today = timezone.now().date()
+
+    # 🔒 SAME MONTH PAYMENT BLOCK
+    if loan.last_payment_date:
+        if (
+            loan.last_payment_date.year == today.year
+            and loan.last_payment_date.month == today.month
+        ):
+            return render(request, "ssl/error.html", {
+                "error": "এই মাসের কিস্তি ইতিমধ্যে পরিশোধ করা হয়েছে।"
+            })
+
+    # 🔒 FULLY CLEARED BLOCK
+    if loan.payment_status == "PAID":
+        return render(request, "ssl/error.html", {
+            "error": "এই লোনটি সম্পূর্ণ পরিশোধ করা হয়েছে।"
+        })
+
+    with transaction.atomic():
+        loan.total_paid += amount
+        loan.last_payment_date = today  # ✅ mark this month paid
+
+        if loan.total_paid >= loan.total_payable:
+            loan.total_paid = loan.total_payable
+            loan.status = "Cleared"
+            loan.payment_status = "PAID"
+        else:
+            loan.payment_status = "PENDING"
+
+        loan.save()
+
+    return render(request, "ssl/success.html", {
+        "loan": loan,
+        "total_paid": loan.total_paid,
+        "months_paid": loan.months_paid,
+        "remaining_amount": loan.remaining_amount,
+    })
+
+
+@csrf_exempt
+def receipt_print(request, loan_id): 
+    
+    loan = get_object_or_404(LoanApplication, id=loan_id)
+
+    context = {
+        "loan": loan,
+        "total_paid": loan.total_paid,
+        "months_paid": loan.months_paid,
+        "remaining_amount": loan.remaining_amount,
+    }
+
+    return render(request, "ssl/receipt.html", context)
+
+
 @csrf_exempt
 def ssl_fail(request):
     return render(request, "ssl/fail.html")
@@ -321,6 +503,7 @@ def kyc_upload(request):
     return render(request, 'loans/kyc_upload.html', {
         'form': form
     })
+
 
 
 

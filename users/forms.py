@@ -188,6 +188,16 @@ class ResetPasswordForm(forms.Form):
     )
 
 
+from tasks.models import LoanApplication
+
+class LoanApplyForm(forms.ModelForm):
+    class Meta:
+        model = LoanApplication
+        fields = ['amount', 'duration_months', 'purpose']
+        # interest_rate form এ থাকবে না, সিস্টেম auto fill করবে
+
+
+
 # class AssignRoleForm(forms.Form):
 #     role = forms.ModelChoiceField(
 #         queryset=Group.objects.all(),

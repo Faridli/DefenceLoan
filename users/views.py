@@ -388,3 +388,56 @@ def Recipient_Account(request):
 
     return render(request, "accounts/bank_verify.html")
 
+
+
+from decimal import Decimal
+from django.shortcuts import render, redirect
+from tasks.models import LoanApplication, InterestRate
+from users.forms import LoanApplyForm
+
+
+def Interest_rate(request):
+    active_rate = InterestRate.objects.filter(is_active=True).first()
+    interest_rate = active_rate.rate if active_rate else Decimal("12.00")  # default
+
+    monthly_installment = None
+    total_payable = None
+    total_interest = None
+
+    if request.method == "POST":
+        form = LoanApplyForm(request.POST)
+        if form.is_valid():
+            loan = form.save(commit=False)
+            loan.user = request.user
+            loan.interest_rate = interest_rate  # lock system rate
+            loan.save()
+            return redirect('dashboard_user')
+    else:
+        form = LoanApplyForm()
+
+    # যদি ইউজার input দেয় তাহলে auto calculate দেখানো
+    amount = request.GET.get("amount")
+    duration = request.GET.get("duration_months")
+
+    if amount and duration:
+        try:
+            amount = Decimal(amount)
+            duration = int(duration)
+            yearly_interest = (amount * interest_rate) / Decimal("100")
+            total_interest = (yearly_interest / 12) * duration
+            total_payable = amount + total_interest
+            monthly_installment = total_payable / duration
+        except:
+            amount = duration = None
+
+    context = {
+        "form": form,
+        "active_rate": interest_rate,
+        "monthly_installment": monthly_installment,
+        "total_payable": total_payable,
+        "total_interest": total_interest,
+        "amount_input": amount,
+        "duration_input": duration
+    }
+    return render(request, "interest_rate/rate.html", context)
+

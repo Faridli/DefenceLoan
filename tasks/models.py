@@ -169,30 +169,197 @@ from django.core.validators import FileExtensionValidator
 # ===============================
 # Loan Application staus of user
 # ===============================
+# class LoanApplication(models.Model):
+#     STATUS_CHOICES = (
+#         ('Pending', 'Pending'),
+#         ('Approved', 'Approved'),
+#         ('Rejected', 'Rejected')
+#     )
+
+#     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+#     amount = models.DecimalField(max_digits=12, decimal_places=2)
+#     monthly_installment = models.PositiveIntegerField()
+#     Total_Paid_installment = models.PositiveIntegerField()
+#     Total_Paid = models.DecimalField(max_digits=12, decimal_places=2)
+#     purpose = models.TextField()
+#     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+#     basic_salary = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+#     bank_name = models.CharField(max_length=200, blank=True, null=True)
+#     salary_account_number = models.CharField(max_length=50, blank=True, null=True)
+#     previous_loans = models.JSONField(blank=True, null=True)
+#     salary_certificate = models.FileField(
+#         upload_to='kyc_docs/',
+#         validators=[FileExtensionValidator(['jpg', 'jpeg', 'png', 'pdf'])],
+#         blank=True,
+#         null=True
+#     )
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField(auto_now=True)
+
+#     def __str__(self):
+#         return f"{self.user.username} - {self.amount} BDT"
+
+
+# =========================
+# InterestRate
+# =========================
+class InterestRate(models.Model):
+    rate = models.DecimalField(max_digits=5, decimal_places=2)
+    is_active = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if self.is_active:
+            InterestRate.objects.exclude(pk=self.pk).update(is_active=False)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.rate}% {'(Active)' if self.is_active else ''}"
+
+
+from decimal import Decimal
+from django.db import models
+from django.conf import settings
+from django.core.exceptions import ValidationError
+
+
 class LoanApplication(models.Model):
+
     STATUS_CHOICES = (
         ('Pending', 'Pending'),
         ('Approved', 'Approved'),
-        ('Rejected', 'Rejected')
+        ('Rejected', 'Rejected'),
+        ('Cleared', 'Cleared'),
     )
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    amount = models.DecimalField(max_digits=12, decimal_places=2)
-    monthly_installment = models.PositiveIntegerField()
-    purpose = models.TextField()
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
-    basic_salary = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
-    bank_name = models.CharField(max_length=200, blank=True, null=True)
-    salary_account_number = models.CharField(max_length=50, blank=True, null=True)
-    previous_loans = models.JSONField(blank=True, null=True)
-    salary_certificate = models.FileField(
-        upload_to='kyc_docs/',
-        validators=[FileExtensionValidator(['jpg', 'jpeg', 'png', 'pdf'])],
-        blank=True,
-        null=True
+    PAYMENT_STATUS_CHOICES = (
+        ('PENDING', 'Pending'),
+        ('PAID', 'Paid'),
+        ('FAILED', 'Failed'),
     )
+
+    # ----------------------------
+    # Basic Info
+    # ----------------------------
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    duration_months = models.PositiveIntegerField(default=12)
+    purpose = models.TextField()
+
+    # ----------------------------
+    # Salary / Bank Info
+    # ----------------------------
+    basic_salary = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    account_name = models.CharField(max_length=100, null=True, blank=True)
+    bank_name = models.CharField(max_length=100, null=True, blank=True)
+    salary_account_number = models.CharField(max_length=50, null=True, blank=True)
+    previous_loans = models.TextField(null=True, blank=True)
+    salary_certificate = models.ImageField(
+        upload_to='salary_certificates/', null=True, blank=True
+    )
+
+    # ----------------------------
+    # Interest & Calculation
+    # ----------------------------
+    interest_rate = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        help_text="Locked interest rate at loan creation"
+    )
+
+    monthly_installment = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    total_payable = models.DecimalField(
+        max_digits=12, decimal_places=2, blank=True, null=True
+    )
+    total_interest = models.DecimalField(
+        max_digits=12, decimal_places=2, blank=True, null=True
+    )
+
+    total_paid = models.DecimalField(
+        max_digits=12, decimal_places=2, default=Decimal("0.00")
+    )
+
+    # ----------------------------
+    # Status & Payment
+    # ----------------------------
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default='Pending'
+    )
+
+    payment_status = models.CharField(
+        max_length=20,
+        choices=PAYMENT_STATUS_CHOICES,
+        default='PENDING'
+    )
+
+    tran_id = models.CharField(
+        max_length=100, blank=True, null=True, unique=True
+    )
+    # ----------------------------
+    # Payment Tracking
+    # ----------------------------
+    last_payment_date = models.DateTimeField(null=True, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+
+    # ----------------------------
+    # SAVE METHOD (RATE LOCK + CALC)
+    # ----------------------------
+    def save(self, *args, **kwargs):
+
+        from .models import InterestRate  # circular import safe
+
+        # 🔒 Lock interest rate on first save
+        if not self.pk:
+            active_rate = InterestRate.objects.filter(is_active=True).first()
+            if not active_rate:
+                raise ValidationError("No active interest rate set by admin.")
+            self.interest_rate = active_rate.rate
+
+        # 🔢 EMI Calculation
+        if self.amount and self.duration_months:
+            amount = Decimal(self.amount)
+            rate = Decimal(self.interest_rate)
+            months = int(self.duration_months)
+
+            yearly_interest = (amount * rate) / Decimal("100")
+            total_interest = (yearly_interest / Decimal("12")) * months
+
+            self.total_interest = total_interest
+            self.total_payable = amount + total_interest
+            self.monthly_installment = self.total_payable / months
+
+        super().save(*args, **kwargs)
+
+    # ----------------------------
+    # Properties
+    # ----------------------------
+    @property
+    def remaining_amount(self):
+        return max(
+            (self.total_payable or Decimal("0.00"))
+            - (self.total_paid or Decimal("0.00")),
+            Decimal("0.00")
+        )
+
+    @property
+    def months_paid(self):
+        if not self.monthly_installment or self.monthly_installment == 0:
+            return 0
+    # Decimal দিয়ে safe division এবং integer conversion
+        return int(self.total_paid // self.monthly_installment)
+
+
+    @property
+    def display_status(self):
+        if self.total_payable and self.total_paid >= self.total_payable:
+            return "Cleared"
+        return self.status
 
     def __str__(self):
         return f"{self.user.username} - {self.amount} BDT"

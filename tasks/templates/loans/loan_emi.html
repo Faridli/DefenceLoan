@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Your Loans - Loan App{% endblock %}
+
+{% block content %}
+
+<h1 class="text-3xl font-bold text-gray-800 mb-6">
+    Welcome, {{ request.user.username }}
+</h1>
+
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+
+    {% for loan in loans %}
+    <div class="bg-white rounded-xl shadow-lg border hover:shadow-2xl transition duration-300 overflow-hidden">
+
+        <!-- Header -->
+        <div class="p-5 bg-gradient-to-r from-green-600 to-lime-500 text-white">
+            <h2 class="text-lg font-bold">Loan #{{ loan.id }}</h2>
+            <p class="text-sm">৳ {{ loan.amount|floatformat:2 }} BDT</p>
+        </div>
+
+        <!-- Body -->
+        <div class="p-5 space-y-3">
+
+            <div class="flex justify-between text-sm">
+                <span class="text-gray-500">Interest</span>
+                <span class="font-semibold text-blue-600">
+                    {{ loan.interest_rate|floatformat:2 }}% (৳ {{ loan.total_interest|floatformat:2 }})
+                </span>
+            </div>
+
+            <div class="flex justify-between text-sm">
+                <span class="text-gray-500">Duration</span>
+                <span class="font-semibold">{{ loan.duration_months }} Months</span>
+            </div>
+
+            <div class="flex justify-between text-sm">
+                <span class="text-gray-500">Monthly EMI</span>
+                <span class="font-bold text-green-600">৳ {{ loan.monthly_installment|floatformat:2 }}</span>
+            </div>
+
+            <div class="flex justify-between text-sm">
+                <span class="text-gray-500">Total Payable</span>
+                <span class="font-semibold">৳ {{ loan.total_payable|floatformat:2 }}</span>
+            </div>
+
+            <div class="flex justify-between text-sm">
+                <span class="text-gray-500">Paid</span>
+                <span class="text-blue-600 font-semibold">৳ {{ loan.total_paid|floatformat:2 }}</span>
+            </div>
+
+            <div class="flex justify-between text-sm">
+                <span class="text-gray-500">Remaining</span>
+                <span class="text-red-600 font-bold">৳ {{ loan.remaining_amount|floatformat:2 }}</span>
+            </div>
+
+            <!-- Progress Bar -->
+            {% if loan.total_payable > 0 %}
+            <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                <div class="bg-green-500 h-2 rounded-full"
+                     style="width: {% widthratio loan.total_paid loan.total_payable 100 %}%">
+                </div>
+            </div>
+            {% else %}
+            <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                <div class="bg-green-500 h-2 rounded-full w-0"></div>
+            </div>
+            {% endif %}
+
+            <!-- Status and Pay Button -->
+            <div class="flex justify-between items-center mt-3">
+                <span class="px-3 py-1 text-xs rounded-full
+                    {% if loan.status == 'Approved' %} bg-green-100 text-green-700
+                    {% elif loan.status == 'Pending' %} bg-yellow-100 text-yellow-700
+                    {% else %} bg-red-100 text-red-700 {% endif %}">
+                    {{ loan.status }}
+                </span>
+
+                {% if loan.status == "Approved" and loan.remaining_amount > 0 %}
+                    <a href="{% url 'ssl_payment' loan.id %}"
+                       class="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded text-sm">
+                        Pay EMI
+                    </a>
+                {% else %}
+                    <span class="text-gray-400 text-sm">Completed</span>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+    {% empty %}
+    <p class="col-span-3 text-center text-gray-500">
+        No loans found.
+    </p>
+    {% endfor %}
+
+</div>
+
+{% endblock %}
