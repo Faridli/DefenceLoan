@@ -9,9 +9,15 @@ urlpatterns = [
     path('activate/<uidb64>/<token>/', views.activate, name='activate'),  
 
     #..........otp.........দিয়ে  লগইন
-    path('otp-login/', views.phone_login, name='otp_login'),  
+    path('otp-login/', views.otp_login, name='otp_login'),  
     path('otp-verify/', views.verify_login_otp, name='otp_verify'), 
     path("resend-otp/", views.resend_login_otp, name="resend_otp"), 
+
+
+    # path("login/", views.otp_login, name="otp_login"),
+    # path("verify-otp/", views.verify_login_otp, name="verify_otp"),
+    # path("resend-otp/", views.resend_login_otp, name="resend_otp"),
+
 
     # Password Reset
     path('forgot-password/', auth_views.PasswordResetView.as_view(

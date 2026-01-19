@@ -129,47 +129,77 @@ from tasks.models import User, OTPVerification
 # =========================
 # Step 1: Phone Login → Send OTP
 # =========================
-@never_cache 
+import random
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.utils import timezone
+from django.contrib.auth import login
+from django.http import JsonResponse
+from django.views.decorators.cache import never_cache
+from django.contrib.auth.models import User
 
-def phone_login(request):
-    if request.method == 'POST':
-        phone = request.POST.get('phone')
+from tasks.models import OTPVerification
+
+
+# =========================
+# STEP 1: Phone → Send OTP (EMAIL)
+# =========================
+def otp_login(request):
+    if request.method == "POST":
+        phone = request.POST.get("phone")
 
         try:
-            # সরাসরি User Model থেকে phone খুঁজুন
             user = User.objects.get(phone=phone)
         except User.DoesNotExist:
-            messages.error(request, "This phone number is not correct/registered.")
-            return redirect("dashboard_user")
+            messages.error(request, "এই ফোন নম্বরের সাথে কোনো একাউন্ট নেই")
+            return redirect("otp_login")
 
-        # Generate OTP
+        if not user.email:
+            messages.error(request, "এই একাউন্টে কোনো ইমেইল যুক্ত নেই")
+            return redirect("otp_login")
+
+        # পুরানো OTP invalid
+        OTPVerification.objects.filter(
+            user=user,
+            purpose="login",
+            is_verified=False
+        ).update(is_verified=True)
+
+        # OTP generate
         otp = str(random.randint(100000, 999999))
 
-        # OTP save
         OTPVerification.objects.create(
             user=user,
             otp=otp,
             purpose="login",
-            expires_at=timezone.now() + timezone.timedelta(minutes=2)
+            expires_at=timezone.now() + timezone.timedelta(minutes=1)
         )
 
-        # এখানে আপনার SMS API বসিয়ে পাঠাতে পারবেন
-        print("LOGIN OTP:", otp)  # Debug purposes
-
-        # Session এ user id রাখুন
+        # session এ user রাখা
         request.session["login_user_id"] = user.id
 
-        messages.success(request, "OTP sent to your phone.")
-        return redirect("otp_verify")
+        # ✅ EMAIL এ OTP পাঠানো
+        user.email_user(
+            subject="Your Login OTP",
+            message=f"""
+Hello {user.username},
+
+Your login OTP is: {otp}
+
+This OTP is valid for 2 minute.
+If you did not request this, please ignore this email.
+"""
+        )
+
+        messages.success(request, "OTP আপনার ইমেইলে পাঠানো হয়েছে")
+        return redirect("otp_verify") 
 
     return render(request, "otp/otp_login.html")
 
 
 # =========================
-# Step 2: Verify OTP → Login
+# STEP 2: Verify OTP → Login
 # =========================
-@never_cache 
-
 def verify_login_otp(request):
     if request.method == "POST":
         otp = request.POST.get("otp")
@@ -180,7 +210,6 @@ def verify_login_otp(request):
             return redirect("otp_login")
 
         try:
-            # OTP check: latest, not expired, purpose=login
             otp_record = OTPVerification.objects.filter(
                 user_id=user_id,
                 otp=otp,
@@ -198,9 +227,15 @@ def verify_login_otp(request):
                 messages.error(request, "Your account is not activated.")
                 return redirect("otp_login")
 
-            # Login
+            # ✅ Login
             login(request, user)
-            messages.success(request, f"Welcome {user.username}!")
+
+            # ✅ next parameter handle
+            next_url = request.GET.get("next") or request.session.get("next")
+
+            if next_url:
+                return redirect(next_url)
+
             return redirect("dashboard_user")
 
         except OTPVerification.DoesNotExist:
@@ -210,13 +245,9 @@ def verify_login_otp(request):
     return render(request, "otp/otp_verify.html")
 
 
-
-
-
-from django.http import JsonResponse
-from django.utils import timezone
-import random
-
+# =========================
+# STEP 3: Resend OTP (EMAIL)
+# =========================
 @never_cache
 def resend_login_otp(request):
     user_id = request.session.get("login_user_id")
@@ -224,26 +255,29 @@ def resend_login_otp(request):
     if not user_id:
         return JsonResponse({"status": "error", "message": "Session expired"}, status=400)
 
-    # পুরানো OTP invalid করে দাও
+    user = User.objects.get(id=user_id)
+
     OTPVerification.objects.filter(
-        user_id=user_id,
+        user=user,
         purpose="login",
         is_verified=False
     ).update(is_verified=True)
 
-    # নতুন OTP
-    new_otp = str(random.randint(100000, 999999))
+    otp = str(random.randint(100000, 999999))
 
     OTPVerification.objects.create(
-        user_id=user_id,
-        otp=new_otp,
+        user=user,
+        otp=otp,
         purpose="login",
         expires_at=timezone.now() + timezone.timedelta(minutes=1)
     )
 
-    print("RESENT LOGIN OTP:", new_otp)  # SMS API এখানে বসবে
+    user.email_user(
+        subject="Resent Login OTP",
+        message=f"Your new OTP is {otp}. Valid for 1 minute."
+    )
 
-    return JsonResponse({"status": "success", "message": "OTP resent"})
+    return JsonResponse({"status": "success"})
 
 
 # =========================

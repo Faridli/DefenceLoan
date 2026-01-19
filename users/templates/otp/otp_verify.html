@@ -3,23 +3,26 @@
 
 <div class="min-h-screen flex items-center justify-center bg-gray-100">
     <div class="bg-white shadow-lg rounded-xl p-8 w-full max-w-md">
+
         <h2 class="text-2xl font-bold text-center text-green-600 mb-6">
             Verify OTP
         </h2>
 
-        {% if messages %}
-            {% for message in messages %}
-                <p class="bg-red-100 text-red-700 p-2 rounded mb-4 message-item">{{ message }}</p>
-            {% endfor %}
-        {% endif %}
+        {% for message in messages %}
+            <p class="bg-red-100 text-red-700 p-2 rounded mb-4 message-item">
+                {{ message }}
+            </p>
+        {% endfor %}
 
         <form method="POST">
             {% csrf_token %}
             <label class="block mb-2 font-semibold">Enter OTP</label>
+
             <input type="text" name="otp"
-                   placeholder="Enter 6 digit OTP"
-                   class="w-full p-3 border-2 border-teal-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+                   placeholder="6 digit OTP"
+                   class="w-full p-3 border-2 border-teal-300 rounded-lg"
                    required>
+
             <button type="submit" id="otp-submit-btn"
                     class="mt-5 w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold">
                 Login
@@ -27,8 +30,8 @@
         </form>
 
         <p class="text-center text-gray-500 mt-4 text-sm">
-            OTP expires in <span id="otp-timer">02:00</span>
-        </p> 
+            OTP expires in <span id="otp-timer">03:00</span>
+        </p>
 
         <p class="text-center mt-4">
             <button id="resend-btn"
@@ -38,74 +41,44 @@
             </button>
         </p>
 
+        <p class="text-xs text-gray-400 text-center mt-2">
+            Check your email inbox or spam folder
+        </p>
+
     </div>
 </div>
 
 <script>
-    // ===============================
-    // 1️⃣ Messages auto-hide
-    // ===============================
-    const messages = document.querySelectorAll('.message-item');
-    messages.forEach(msg => {
-        setTimeout(() => {
-            msg.style.transition = "opacity 0.5s ease";
-            msg.style.opacity = 0;
-            setTimeout(() => msg.remove(), 500);
-        }, 1500);
-    });
+    let timeLeft = 4*60;
+    const timerEl = document.getElementById("otp-timer");
+    const resendBtn = document.getElementById("resend-btn");
+    const submitBtn = document.getElementById("otp-submit-btn");
 
-    // ===============================
-    // 2️⃣ OTP Timer + Resend
-    // ===============================
-    let timeLeft = 2 * 60;
-    let countdown;
+    const countdown = setInterval(() => {
+        let m = Math.floor(timeLeft / 60);
+        let s = timeLeft % 60;
+        timerEl.textContent =
+            `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        timeLeft--;
 
-    const timerEl = document.getElementById('otp-timer');
-    const submitBtn = document.getElementById('otp-submit-btn');
-    const resendBtn = document.getElementById('resend-btn');
+        if (timeLeft < 0) {
+            clearInterval(countdown);
+            timerEl.textContent = "Expired";
+            submitBtn.disabled = true;
+            resendBtn.disabled = false;
+        }
+    }, 1000);
 
-    function startTimer() {
-        clearInterval(countdown);
-        timeLeft = 2 * 60;
-        submitBtn.disabled = false;
-        submitBtn.classList.remove("bg-gray-400", "cursor-not-allowed");
-        resendBtn.disabled = true;
-
-        countdown = setInterval(() => {
-            let minutes = Math.floor(timeLeft / 60);
-            let seconds = timeLeft % 60;
-
-            timerEl.textContent =
-                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-
-            timeLeft--;
-
-            if (timeLeft < 0) {
-                clearInterval(countdown);
-                timerEl.textContent = "Expired";
-                submitBtn.disabled = true;
-                resendBtn.disabled = false;
-            }
-        }, 1000);
-    }
-
-    // Resend OTP click
     resendBtn.addEventListener("click", function () {
         fetch("/users/resend-otp/")
-            .then(response => response.json())
+            .then(res => res.json())
             .then(data => {
                 if (data.status === "success") {
-                    alert("New OTP sent to your phone!");
-                    startTimer();
-                } else {
-                    alert("Failed to resend OTP");
+                    alert("New OTP sent to your email");
+                    location.reload();
                 }
             });
     });
-
-    // Start timer when page loads
-    startTimer();
 </script>
-
 
 {% endblock %}
