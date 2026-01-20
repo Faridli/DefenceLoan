@@ -274,7 +274,7 @@ def resend_login_otp(request):
 
     user.email_user(
         subject="Resent Login OTP",
-        message=f"Your new OTP is {otp}. Valid for 1 minute."
+        message=f"Your new OTP is {otp}. Valid for 3 minute."
     )
 
     return JsonResponse({"status": "success"})
@@ -290,7 +290,7 @@ def register_profile(request):
         form = UserRegisterForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
             form.save()
-            return redirect('dashboard')
+            return redirect('dashboard_user')
     else:
         form = UserRegisterForm(instance=request.user)
 

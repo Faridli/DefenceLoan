@@ -157,10 +157,10 @@ SSLCOMMERZ_URL = config('SSLCOMMERZ_URL')
 
 # import os
 
-TWILIO_ACCOUNT_SID = config("TWILIO_ACCOUNT_SID")
-TWILIO_AUTH_TOKEN = config("TWILIO_AUTH_TOKEN")
-# TWILIO_PHONE = os.getenv("TWILIO_PHONE") 
-TWILIO_VERIFY_SID= config("TWILIO_VERIFY_SID")
+# TWILIO_ACCOUNT_SID = config("TWILIO_ACCOUNT_SID")
+# TWILIO_AUTH_TOKEN = config("TWILIO_AUTH_TOKEN")
+# # TWILIO_PHONE = os.getenv("TWILIO_PHONE") 
+# TWILIO_VERIFY_SID= config("TWILIO_VERIFY_SID")
 
 # login এর জন্য URL ঠিক করুন
 LOGIN_URL = 'login_user'        # এখানে আমরা urls.py তে নাম ব্যবহার করব
