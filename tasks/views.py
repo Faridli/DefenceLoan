@@ -506,16 +506,107 @@ def kyc_upload(request):
 
 
 
+#................................
+#...........Admin Dashboard...... 
+#................................ 
 
-# @login_required
-# def profile_update(request):
-#     if request.method == 'POST':
-#         form = UserProfileForm(request.POST, request.FILES, instance=request.user)
-#         if form.is_valid():
-#             form.save()
-#             messages.success(request, "Profile updated successfully")
-#             return redirect('profile')
-#     else:
-#         form = UserProfileForm(instance=request.user)
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.models import User, Group
+from django.contrib import messages
+from django.contrib.auth.decorators import user_passes_test
+from tasks.models import LoanApplication
+from tasks.forms import AssignRoleForm, CreateGroupForm
 
-#     return render(request, 'profile.html', {'form': form})
+def is_admin(user):
+    return user.is_superuser  # অথবা আপনার রোল চেক
+
+# @user_passes_test(is_admin, login_url='no-permission')
+def admin_dashboard(request):
+    total_loans = LoanApplication.objects.count()
+    pending_loans = LoanApplication.objects.filter(status='Pending').count()
+    approved_loans = LoanApplication.objects.filter(status='Approved').count()
+    rejected_loans = LoanApplication.objects.filter(status='Rejected').count()
+    cleared_loans = LoanApplication.objects.filter(status='Cleared').count()
+
+    context = {
+        "total_loans": total_loans,
+        "pending_loans": pending_loans,
+        "approved_loans": approved_loans,
+        "rejected_loans": rejected_loans,
+        "cleared_loans": cleared_loans,
+    }
+    return render(request, 'admin/dashboard.html', context)
+
+# @user_passes_test(is_admin, login_url='no-permission')
+def loan_list(request):
+    loans = LoanApplication.objects.select_related('user').all()
+    return render(request, 'admin/loan_list.html', {"loans": loans})
+
+# @user_passes_test(is_admin, login_url='no-permission')
+def loan_detail(request, loan_id):
+    loan = get_object_or_404(LoanApplication, id=loan_id)
+    return render(request, 'admin/loan_detail.html', {"loan": loan})
+
+# @user_passes_test(is_admin, login_url='no-permission')
+def approve_loan(request, loan_id):
+    loan = get_object_or_404(LoanApplication, id=loan_id)
+    loan.status = 'Approved'
+    loan.save()
+    messages.success(request, f"Loan {loan.id} has been approved.")
+    return redirect('loan-list')
+
+
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.models import User, Group
+from .forms import AssignRoleForm, CreateGroupForm
+
+def is_admin(user):
+    return user.is_superuser
+
+
+from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, render, redirect
+from django.contrib import messages
+
+User = get_user_model()
+# @user_passes_test(is_admin, login_url='no-permission')
+def assign_role(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    form = AssignRoleForm()
+    if request.method == 'POST':
+        form = AssignRoleForm(request.POST)
+        if form.is_valid():
+            role = form.cleaned_data.get('role')
+            user.groups.clear()
+            user.groups.add(role)
+            messages.success(request, f"{user.username} has been assigned to {role.name}")
+            return redirect('admin-dashboard')
+    return render(request, 'admin/assign_role.html', {"form": form, "user": user})
+
+# @user_passes_test(is_admin, login_url='no-permission')
+def Create_Group(request):
+    form = CreateGroupForm()
+    if request.method == 'POST':
+        form = CreateGroupForm(request.POST)
+        if form.is_valid():
+            group = form.save()
+            messages.success(request, f"Group {group.name} created successfully")
+            return redirect('create-group')
+    return render(request, 'admin/create_group.html', {"form": form})
+
+# @user_passes_test(is_admin, login_url='no-permission')
+def Group_list(request):
+    groups = Group.objects.prefetch_related('permissions').all()
+    return render(request, 'admin/group_list.html', {"groups": groups})
+
+
+
+
+from django.shortcuts import render
+
+def no_permission(request):
+    return render(request, 'admin/no_permission.html')

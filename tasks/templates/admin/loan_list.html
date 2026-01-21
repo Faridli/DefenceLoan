@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1 class="text-3xl font-bold mb-6 text-gray-800">All Loans</h1>
+
+<div class="overflow-x-auto">
+    <table class="min-w-full bg-white shadow-lg rounded-lg overflow-hidden">
+        <thead class="bg-gray-100">
+            <tr>
+                <th class="py-3 px-6 text-left text-gray-600 font-medium uppercase tracking-wider">ID</th>
+                <th class="py-3 px-6 text-left text-gray-600 font-medium uppercase tracking-wider">User</th>
+                <th class="py-3 px-6 text-left text-gray-600 font-medium uppercase tracking-wider">Amount (BDT)</th>
+                <th class="py-3 px-6 text-left text-gray-600 font-medium uppercase tracking-wider">Status</th>
+                <th class="py-3 px-6 text-center text-gray-600 font-medium uppercase tracking-wider">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+            {% for loan in loans %}
+            <tr class="hover:bg-gray-50 transition">
+                <td class="py-4 px-6 text-gray-700 font-medium">{{ loan.id }}</td>
+                <td class="py-4 px-6 text-gray-700">{{ loan.user.username }}</td>
+                <td class="py-4 px-6 text-gray-700">{{ loan.amount }}</td>
+                <td class="py-4 px-6">
+                    {% if loan.status == 'Pending' %}
+                        <span class="bg-yellow-100 text-yellow-800 py-1 px-3 rounded-full text-sm font-semibold">{{ loan.status }}</span>
+                    {% elif loan.status == 'Approved' %}
+                        <span class="bg-green-100 text-green-800 py-1 px-3 rounded-full text-sm font-semibold">{{ loan.status }}</span>
+                    {% elif loan.status == 'Rejected' %}
+                        <span class="bg-red-100 text-red-800 py-1 px-3 rounded-full text-sm font-semibold">{{ loan.status }}</span>
+                    {% elif loan.status == 'Cleared' %}
+                        <span class="bg-blue-100 text-blue-800 py-1 px-3 rounded-full text-sm font-semibold">{{ loan.status }}</span>
+                    {% endif %}
+                </td>
+                <td class="py-4 px-6 text-center">
+                    <a href="{% url 'loan-detail' loan.id %}" class="text-blue-500 hover:text-blue-700 font-semibold transition">View</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="py-4 px-6 text-center text-gray-500">No loans found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

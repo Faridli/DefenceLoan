@@ -1,7 +1,8 @@
 from django.urls import path
 from django.views.generic import TemplateView 
 from django.contrib.auth import views as auth_views
-from . import views
+from . import views 
+
 
 urlpatterns = [
     path('', views.home),
@@ -32,6 +33,25 @@ urlpatterns = [
     path("receipt/<int:loan_id>/", views.receipt_print, name="receipt_print"),
 
     path('ssl-fail/', views.ssl_fail, name='ssl_fail'),
-    path('ssl-cancel/', views.ssl_cancel, name='ssl_cancel'),
+    path('ssl-cancel/', views.ssl_cancel, name='ssl_cancel'), 
+
+
+    #..............................
+    #.........Admin Dashboard......
+    #..............................
+
+
+    path('admin/dashboard/', views.admin_dashboard, name='admin-dashboard'),
+    path('admin/loans/', views.loan_list, name='loan-list'),
+    path('admin/loan/<int:loan_id>/', views.loan_detail, name='loan-detail'),
+    path('admin/loan/<int:loan_id>/approve/', views.approve_loan, name='approve-loan'),
+    path('admin/users/<int:user_id>/assign-role/', views.assign_role, name='assign-role'),
+    path('admin/groups/create/', views.Create_Group, name='create-group'),
+    path('admin/groups/', views.Group_list, name='group-list'),  
+
+
+    path('no-permission/', views.no_permission, name='no-permission'),
+  
 
 ]
+ 

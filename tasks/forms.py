@@ -114,3 +114,46 @@ class UserKycForm(forms.ModelForm):
         ]
 
             
+#..........................
+#........Admin Form.........
+#........................... 
+
+from django import forms
+from django.contrib.auth.models import Group
+
+class AssignRoleForm(forms.Form):
+    role = forms.ModelChoiceField(
+        queryset=Group.objects.all(),
+        label="Select Role",
+        widget=forms.Select(attrs={"class": "border rounded p-2 w-full"})
+    )
+
+class CreateGroupForm(forms.ModelForm):
+    class Meta:
+        model = Group
+        fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={"class": "border rounded p-2 w-full"})
+        }
+
+
+
+# users/forms.py বা tasks/forms.py
+from django import forms
+from django.contrib.auth.models import Group, Permission
+
+class CreateGroupForm(forms.ModelForm):
+    permissions = forms.ModelMultipleChoiceField(
+        queryset=Permission.objects.none(),  # শুরুতে কোনো permission দেখাবে না
+        widget=forms.CheckboxSelectMultiple,
+        required=False
+    )
+
+    class Meta:
+        model = Group
+        fields = ['name', 'permissions']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # এখানে চাইলে শুধু কিছু permission দেখাতে পারো, যেমন:
+        self.fields['permissions'].queryset = Permission.objects.all()  # সব permission দেখাবে

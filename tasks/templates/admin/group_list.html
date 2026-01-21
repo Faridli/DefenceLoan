@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1 class="text-3xl font-bold mb-6 text-gray-800">All Groups</h1>
+
+<div class="overflow-x-auto bg-white shadow-lg rounded-lg">
+    <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-100">
+            <tr>
+                <th class="px-6 py-3 text-left text-gray-600 font-medium uppercase tracking-wider">ID</th>
+                <th class="px-6 py-3 text-left text-gray-600 font-medium uppercase tracking-wider">Group Name</th>
+                <th class="px-6 py-3 text-left text-gray-600 font-medium uppercase tracking-wider">Permissions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+            {% for group in groups %}
+            <tr class="hover:bg-gray-50 transition">
+                <td class="px-6 py-4 text-gray-700 font-medium">{{ group.id }}</td>
+                <td class="px-6 py-4 text-gray-700">{{ group.name }}</td>
+                <td class="px-6 py-4 text-gray-700">
+                    {% for perm in group.permissions.all %}
+                        <span class="bg-gray-200 text-gray-800 text-xs px-2 py-1 rounded-full mr-1 mb-1 inline-block">
+                            {{ perm.name }}
+                        </span>
+                    {% empty %}
+                        <span class="text-gray-400 text-sm">No permissions</span>
+                    {% endfor %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" class="px-6 py-4 text-center text-gray-500">No groups found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
