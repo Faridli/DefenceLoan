@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="max-w-4xl mx-auto p-4 bg-white shadow-md rounded-lg">
+    <div class="flex items-center justify-between mb-4">
+    <h2 class="text-2xl font-bold">User profile</h2>
+
+    {% if user.live_photo %}
+    <img src="{{ user.live_photo.url }}" alt="Live Photo" class="w-16 h-16 rounded-full border">
+    {% else %}
+    <span class="text-gray-500">No Photo</span>
+    {% endif %}
+    </div>
+
+
+    <!-- Basic Information -->
+    <h3 class="text-xl font-semibold mt-4">Basic Information</h3>
+    <ul class="list-disc pl-5">
+        <li>Username: {{ user.username }}</li>
+        <li>Full Name: {{ user.name }}</li>
+        <li>Rank: {{ user.rank }}</li>
+        <li>Corps: {{ user.corps }}</li>
+        <li>Joining Date: {{ user.joining_date }}</li>
+        <li>Birth Date: {{ user.birth_date }}</li>
+        <li>Phone: {{ user.phone }}</li>
+        <li>National ID Number: {{ user.national_id_number }}</li>
+        <li>Service ID Number: {{ user.service_id_number }}</li>
+    </ul>
+
+    <!-- Documents -->
+    <h3 class="text-xl font-semibold mt-4">Uploaded Documents</h3>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-2">
+        {% if user.national_id_card %}
+        <div class="border p-2 rounded shadow">
+            <p class="font-medium">NID Document</p>
+            <a href="{{ user.national_id_card.url }}" target="_blank">
+                <img src="{{ user.national_id_card.url }}" alt="NID Document" class="w-full h-auto mt-1 rounded">
+            </a>
+        </div>
+        {% endif %}
+        {% if user.national_id_back %}
+        <div class="border p-2 rounded shadow">
+            <p class="font-medium">NID Document</p>
+            <a href="{{ user.national_id_card.url }}" target="_blank">
+                <img src="{{ user.national_id_card.url }}" alt="NID Document" class="w-full h-auto mt-1 rounded">
+            </a>
+        </div>
+        {% endif %}
+
+        {% if user.service_id_card %}
+        <div class="border p-2 rounded shadow">
+            <p class="font-medium">Service ID Document</p>
+            <a href="{{ user.service_id_card.url }}" target="_blank">
+                <img src="{{ user.service_id_card.url }}" alt="Service ID Document" class="w-full h-auto mt-1 rounded">
+            </a>
+        </div>
+        {% endif %}
+
+        {% if user.live_photo %}
+        <div class="border p-2 rounded shadow">
+            <p class="font-medium">Live Photo</p>
+            <a href="{{ user.live_photo.url }}" target="_blank">
+                <img src="{{ user.live_photo.url }}" alt="Live Photo" class="w-full h-auto mt-1 rounded">
+            </a>
+        </div>
+        {% endif %}
+
+        {% if user.spouse_national_id_card %}
+        <div class="border p-2 rounded shadow">
+            <p class="font-medium">Spouse NID</p>
+            <a href="{{ user.spouse_national_id_card.url }}" target="_blank">
+                <img src="{{ user.spouse_national_id_card.url }}" alt="Spouse NID" class="w-full h-auto mt-1 rounded">
+            </a>
+        </div>
+        {% endif %}
+        {% if user.spouse_nid_back %}
+        <div class="border p-2 rounded shadow">
+            <p class="font-medium">Spouse NID</p>
+            <a href="{{ user.spouse_national_id_card.url }}" target="_blank">
+                <img src="{{ user.spouse_national_id_card.url }}" alt="Spouse NID" class="w-full h-auto mt-1 rounded">
+            </a>
+        </div>
+        {% endif %}
+
+        {% if not user.national_id_card and not user.service_id_card and not user.live_photo and not user.spouse_national_id_card %}
+        <p class="text-gray-500">No documents uploaded yet.</p>
+        {% endif %}
+    </div>
+
+    <!-- Loans (Optional) -->
+    {% if loans %}
+    <h3 class="text-xl font-semibold mt-4">Loan Applications</h3>
+    <ul class="list-disc pl-5">
+        {% for loan in loans %}
+        <li>
+            Amount: {{ loan.amount }} | Duration: {{ loan.duration_months }} months | Interest: {{ loan.interest_rate }}% | Status: {{ loan.display_status }}
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+</div>
+
+{% endblock %}

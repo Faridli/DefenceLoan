@@ -109,10 +109,14 @@ class UserKycForm(forms.ModelForm):
             
             'service_id_card',
             'national_id_card',
+            'national_id_back',
             'live_photo',      
             'spouse_national_id_card',
+            'spouse_nid_back',
         ]
-
+        widgets = {
+            'live_photo': forms.ClearableFileInput(attrs={'accept': 'image/*', 'capture': 'environment'}),
+        }
             
 #..........................
 #........Admin Form.........

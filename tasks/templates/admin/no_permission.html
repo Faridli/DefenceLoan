@@ -2,11 +2,79 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>No Permission</title>
+    <title>Access Denied</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1f2933, #111827);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .card {
+            background: #ffffff;
+            color: #1f2933;
+            padding: 40px 35px;
+            max-width: 420px;
+            width: 90%;
+            border-radius: 14px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+        }
+
+        .icon {
+            font-size: 60px;
+            color: #dc2626;
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            margin: 10px 0;
+            font-size: 26px;
+            font-weight: 700;
+        }
+
+        p {
+            font-size: 15px;
+            color: #4b5563;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        a {
+            display: inline-block;
+            text-decoration: none;
+            background: #2563eb;
+            color: #ffffff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        a:hover {
+            background: #1e40af;
+            transform: translateY(-2px);
+        }
+    </style>
 </head>
 <body>
-    <h1>Access Denied</h1>
-    <p>You do not have permission to view this page.</p>
-    <a href="/">Go Home</a>
+
+    <div class="card">
+        <div class="icon">🚫</div>
+        <h1>No permission</h1>
+        <p>
+            Sorry, you do not have permission to access this page.
+            
+        </p>
+        <a href="/">Go Back to Home</a>
+    </div>
+
 </body>
 </html>

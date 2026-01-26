@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .loan-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: #fff;
+  }
+
+  .loan-table th, .loan-table td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: center;
+  }
+
+  .loan-table th {
+    background: #f4f6f8;
+    font-weight: 600;
+  }
+
+  .status-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .pending { background: #fff3cd; color: #856404; }
+  .approved { background: #d1ecf1; color: #0c5460; }
+  .rejected { background: #f8d7da; color: #721c24; }
+  .cleared { background: #d4edda; color: #155724; }
+
+  select {
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  select:disabled {
+    background: #eee;
+    cursor: not-allowed;
+  }
+</style>
+
+<h2>Loan Management</h2>
+
+<table class="loan-table">
+  <thead>
+    <tr>
+      <th>User</th>
+      <th>Loan Amount</th>
+      <th>Interest (%)</th>
+      <th>Total Payable</th>
+      <th>Monthly EMI</th>
+      <th>Total Paid</th>
+      <th>Months Paid</th>
+      <th>Remaining</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+
+  <tbody>
+  {% for loan in loans %}
+    <tr>
+      <td>{{ loan.user.username }}</td>
+      <td>{{ loan.amount }}</td>
+      <td>{{ loan.interest_rate }}</td>
+      <td>{{ loan.total_payable }}</td>
+      <td>{{ loan.monthly_installment }}</td>
+      <td>{{ loan.total_paid }}</td>
+      <td>{{ loan.months_paid }}</td>
+      <td>{{ loan.remaining_amount }}</td>
+
+      <td>
+        {% if loan.display_status == 'Cleared' %}
+          <span class="status-badge cleared">Cleared</span>
+        {% elif loan.status == 'Approved' %}
+          <span class="status-badge approved">Approved</span>
+        {% else %}
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="loan_id" value="{{ loan.id }}">
+            <select name="status" onchange="this.form.submit()">
+              {% for key, value in loan.STATUS_CHOICES %}
+                <option value="{{ key }}" {% if loan.status == key %}selected{% endif %}>
+                  {{ value }}
+                </option>
+              {% endfor %}
+            </select>
+          </form>
+        {% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

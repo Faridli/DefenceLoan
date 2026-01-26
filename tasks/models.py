@@ -102,6 +102,12 @@ class User(AbstractUser):
         null=True,
         validators=[FileExtensionValidator(['jpg', 'jpeg', 'png', 'pdf'])]
     )
+    national_id_back = models.FileField(
+        upload_to='nid/',
+        blank=True,
+        null=True,
+        validators=[FileExtensionValidator(['jpg', 'jpeg', 'png', 'pdf'])]
+    )
 
     # =========================
     # Service ID
@@ -155,50 +161,18 @@ class User(AbstractUser):
         null=True,
         validators=[FileExtensionValidator(['jpg', 'jpeg', 'png', 'pdf'])]
     )
+    spouse_nid_back = models.FileField(
+        upload_to='nid/',
+        blank=True,
+        null=True,
+        validators=[FileExtensionValidator(['jpg', 'jpeg', 'png', 'pdf'])]
+    )
 
     # =========================
     # String Representation
     # =========================
     def __str__(self):
         return self.username
-
-from django.db import models
-from django.conf import settings
-from django.core.validators import FileExtensionValidator
-
-# ===============================
-# Loan Application staus of user
-# ===============================
-# class LoanApplication(models.Model):
-#     STATUS_CHOICES = (
-#         ('Pending', 'Pending'),
-#         ('Approved', 'Approved'),
-#         ('Rejected', 'Rejected')
-#     )
-
-#     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-#     amount = models.DecimalField(max_digits=12, decimal_places=2)
-#     monthly_installment = models.PositiveIntegerField()
-#     Total_Paid_installment = models.PositiveIntegerField()
-#     Total_Paid = models.DecimalField(max_digits=12, decimal_places=2)
-#     purpose = models.TextField()
-#     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
-#     basic_salary = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
-#     bank_name = models.CharField(max_length=200, blank=True, null=True)
-#     salary_account_number = models.CharField(max_length=50, blank=True, null=True)
-#     previous_loans = models.JSONField(blank=True, null=True)
-#     salary_certificate = models.FileField(
-#         upload_to='kyc_docs/',
-#         validators=[FileExtensionValidator(['jpg', 'jpeg', 'png', 'pdf'])],
-#         blank=True,
-#         null=True
-#     )
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField(auto_now=True)
-
-#     def __str__(self):
-#         return f"{self.user.username} - {self.amount} BDT"
-
 
 # =========================
 # InterestRate
@@ -422,3 +396,23 @@ from django.db import models
 
 class SomeModel(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+
+
+# tasks/models.py
+from django.db import models
+from django.contrib.auth import get_user_model
+from django.utils import timezone
+from datetime import date
+
+User = get_user_model() 
+class AutoDebit(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    start_date = models.DateField(default=timezone.now)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    months = models.PositiveIntegerField()
+    next_payment_date = models.DateField()
+    is_active = models.BooleanField(default=True)
+    gateway_reference = models.CharField(max_length=255)
+    next_payment_date = models.DateField(default=date.today)

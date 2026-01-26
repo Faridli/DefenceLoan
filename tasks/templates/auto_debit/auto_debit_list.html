@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-3xl mx-auto mt-10">
+    <h2 class="text-2xl font-semibold mb-4">My Auto-Debits</h2>
+    <table class="w-full border-collapse border">
+        <thead>
+            <tr class="bg-gray-100">
+                <th class="border px-4 py-2">Amount (৳)</th>
+                <th class="border px-4 py-2">Start Date</th>
+                <th class="border px-4 py-2">Next Payment Date</th>
+                <th class="border px-4 py-2">Months</th>
+                <th class="border px-4 py-2">Status</th>
+                <th class="border px-4 py-2">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for debit in auto_debits %}
+            <tr>
+                <td class="border px-4 py-2">{{ debit.amount }}</td>
+                <td class="border px-4 py-2">{{ debit.start_date }}</td>
+                <td class="border px-4 py-2">{{ debit.next_payment_date }}</td>
+                <td class="border px-4 py-2">{{ debit.months }}</td>
+                <td class="border px-4 py-2">
+                    {% if debit.is_active %}
+                    <form method="post" action="{% url 'cancel_auto_debit' debit.id %}">
+                        {% csrf_token %}
+                        <button
+                            type="submit"
+                            class="text-red-600 hover:underline"
+                            onclick="return confirm('আপনি কি নিশ্চিত Auto-Debit বন্ধ করতে চান?')"
+                        >
+                            Cancel
+                        </button>
+                    </form>
+                    {% endif %}
+                </td>
+
+                <td class="border px-4 py-2">
+                    {% if debit.is_active %}
+                    <a href="{% url 'cancel_auto_debit' debit.id %}" class="text-green-500 text-center hover:underline">Back</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center py-4">No Auto-Debits found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

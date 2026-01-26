@@ -1,0 +1,707 @@
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+from django.conf import settings
+from django.core.mail import send_mail
+from django.http import JsonResponse
+from .models import LoanApplication,LoanAdmin, OTPVerification, UserDevice, UserVerification
+from .forms import UserRegisterForm
+import random, json, uuid, requests
+from django.views.decorators.csrf import csrf_exempt
+from datetime import timedelta
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from .models import LoanApplication
+from django.views.decorators.cache import never_cache
+import uuid
+import requests
+from django.shortcuts import get_object_or_404, redirect, render
+from django.conf import settings
+from .models import LoanApplication  # tasks app এর LoanApplication
+
+
+def home(request):
+    return redirect('dashboard')
+
+@never_cache
+@login_required
+def dashboard_user(request):
+    loans = LoanApplication.objects.filter(user=request.user).order_by('-id')
+
+    return render(request, 'loans/dashboard_user.html', {
+        'loans': loans
+    }) 
+
+from django.shortcuts import render
+from .models import LoanApplication
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from .models import LoanApplication
+@login_required
+def loan_emi(request):
+    # শুধুমাত্র বর্তমান ইউজারের লোনগুলো আনবে
+    loans = LoanApplication.objects.filter(user=request.user).order_by('-id')
+
+    # Safety check, কিন্তু property directly set করবেন না
+    for loan in loans:
+        if loan.total_payable is None:
+            loan.total_payable = 0
+        if loan.total_paid is None:
+            loan.total_paid = 0
+        if loan.monthly_installment is None:
+            loan.monthly_installment = 0
+
+        # এখানে আর set না করে শুধু read করবে
+        loan.remaining = loan.remaining_amount  # template এ use করার জন্য
+        loan.months = loan.months_paid  # template এ use করার জন্য
+
+    context = {
+        "loans": loans
+    }
+    return render(request, "loans/loan_emi.html", context)
+
+
+
+from django.shortcuts import render, get_object_or_404
+from .models import LoanApplication
+
+def emi(request, loan_id):
+    loan = get_object_or_404(LoanApplication, id=loan_id, user=request.user)
+
+    context = {
+        "loan": loan,
+        "months_paid": loan.months_paid(),
+        "months_left": loan.duration_months - loan.months_paid(),
+    }
+
+    return render(request, "loans/emi.html", context)
+
+
+# লোন ড্যাশবোর্ড 
+@never_cache
+@login_required
+def Admin_dashboard(request):
+    loans = LoanAdmin.objects.filter(user=request.user)
+    total = loans.count()
+    approved = loans.filter(status='Approved').count()
+    pending = loans.filter(status='Pending').count()
+    rejected = loans.filter(status='Rejected').count()
+
+    context = {
+        'loans': loans,
+        'total': total,
+        'approved': approved,
+        'pending': pending,
+        'rejected': rejected
+    }
+    return render(request, 'admin/dashboard.html', context)
+
+
+import json
+from decimal import Decimal
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .models import LoanApplication, InterestRate
+
+from decimal import Decimal
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
+from .models import LoanApplication, InterestRate
+import json
+
+@never_cache
+@login_required
+def apply_loan(request):
+    error = None
+    amount_input = request.GET.get('amount') or ''
+    duration_input = request.GET.get('duration_months') or ''
+    monthly_installment = total_payable = total_interest = None
+
+    # ================= Loan Calculator GET =================
+    if request.method == 'GET' and amount_input and duration_input:
+        try:
+            amount = Decimal(amount_input)
+            months = int(duration_input)
+            active_rate = InterestRate.objects.filter(is_active=True).first()
+
+            if not active_rate:
+                error = "No active interest rate is set by admin."
+            else:
+                rate = Decimal(active_rate.rate)
+                yearly_interest = (amount * rate) / Decimal("100")
+                total_interest = (yearly_interest / Decimal("12")) * months
+                total_payable = amount + total_interest
+                monthly_installment = total_payable / months
+        except Exception as e:
+            error = "Invalid input for loan calculation."
+
+    # ================= POST : Save Loan Application =================
+    if request.method == 'POST':
+        purpose = request.POST.get('purpose')
+        basic_salary = request.POST.get('basic_salary') or None
+        account_name = request.POST.get('account_name') or None
+        bank_name = request.POST.get('bank_name') or None
+        salary_account_number = request.POST.get('salary_account_number') or None
+        previous_loans = request.POST.get('previous_loans') or None
+        salary_certificate = request.FILES.get('salary_certificate')
+
+        # amount and duration from GET (calculator)
+        try:
+            amount = Decimal(request.GET.get('amount'))
+            duration_months = int(request.GET.get('duration_months'))
+        except:
+            error = "Amount and Duration are required from Calculator."
+
+        if not error:
+            # Convert previous_loans JSON safely
+            previous_loans_value = None
+            if previous_loans and previous_loans.lower() != 'no':
+                try:
+                    previous_loans_value = json.loads(previous_loans)
+                except json.JSONDecodeError:
+                    previous_loans_value = None
+
+            # Create LoanApplication
+            try:
+                loan = LoanApplication.objects.create(
+                    user=request.user,
+                    amount=amount,
+                    duration_months=duration_months,
+                    purpose=purpose,
+                    basic_salary=basic_salary,
+                    account_name=account_name,
+                    bank_name=bank_name,
+                    salary_account_number=salary_account_number,
+                    previous_loans=previous_loans_value,
+                    salary_certificate=salary_certificate
+                )
+                print("Loan saved, redirecting to bank_verify...")
+                return redirect('bank_verify')  # এখানে আপনার পরবর্তী page
+            except ValidationError as e:
+                error = e 
+                print("ValidationError:", e)
+
+    context = {
+        'error': error,
+        'amount_input': amount_input,
+        'duration_input': duration_input,
+        'monthly_installment': monthly_installment,
+        'total_payable': total_payable,
+        'total_interest': total_interest
+    }
+
+    return render(request, 'loans/apply_loan.html', context)
+
+
+
+@never_cache
+@login_required
+def send_otp(request):
+    otp = random.randint(100000, 999999)
+    OTPVerification.objects.create(
+        user=request.user,
+        otp=otp,
+        purpose="Loan Approval",
+        expires_at=timezone.now() + timedelta(minutes=5)
+    )
+    send_mail(
+        'Loan Verification OTP',
+        f'Your OTP is {otp}',
+        settings.EMAIL_HOST_USER,
+        [request.user.email],
+        fail_silently=False
+    )
+    return redirect('verify_otp')
+
+@login_required
+def verify_otp(request):
+    if request.method == 'POST':
+        input_otp = request.POST.get('otp')
+        otp_obj = OTPVerification.objects.filter(user=request.user, is_verified=False, expires_at__gte=timezone.now()).last()
+        if otp_obj and str(otp_obj.otp) == input_otp:
+            otp_obj.is_verified = True
+            otp_obj.save()
+            return redirect('dashboard')
+    return render(request, 'loans/verify_otp.html')
+
+@login_required
+def save_location(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        UserDevice.objects.create(
+            user=request.user,
+            latitude=data.get('lat'),
+            longitude=data.get('lng'),
+            device_info=data.get('device')
+        )
+        return JsonResponse({'status': 'saved'})
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+import uuid
+import requests
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.conf import settings
+from .models import LoanApplication
+
+@login_required
+def ssl_payment(request, loan_id):
+    loan = get_object_or_404(LoanApplication, id=loan_id, user=request.user)
+    
+    # Transaction ID generate
+    tran_id = str(uuid.uuid4())
+    loan.tran_id = tran_id
+    loan.save()
+
+    # Payment data
+    data = {
+        'store_id': settings.SSLCOMMERZ_STORE_ID,
+        'store_passwd': settings.SSLCOMMERZ_STORE_PASS,
+        'total_amount': float(loan.monthly_installment),
+        'currency': 'BDT',
+        'tran_id': tran_id,
+        'success_url': request.build_absolute_uri('/tasks/ssl-success/'),
+        'fail_url': request.build_absolute_uri('/tasks/ssl-fail/'),
+        'cancel_url': request.build_absolute_uri('/tasks/ssl-cancel/'),
+        'cus_name': request.user.username or request.user.get_full_name(),
+        'cus_email': request.user.email,
+        'cus_phone': request.user.phone or '01700000000',
+    }
+
+    # Request to SSLCommerz (sandbox)
+    response = requests.post(settings.SSLCOMMERZ_URL, data=data)
+    
+    try:
+        ssl_data = response.json()
+    except ValueError:
+        ssl_data = {}
+
+    print("SSL RESPONSE:", ssl_data)  # Debug
+
+    if ssl_data.get("status") == "SUCCESS" and ssl_data.get("GatewayPageURL"):
+        return redirect(ssl_data["GatewayPageURL"])
+    else:
+        return render(request, "loans/payment_error.html", {
+            "error": ssl_data.get("failedreason", "Payment gateway rejected the request")
+        })
+
+
+
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from decimal import Decimal
+from .models import LoanApplication
+
+@csrf_exempt
+def ssl_ipn(request):
+    if request.method == "POST":
+        tran_id = request.POST.get("tran_id")
+        status = request.POST.get("status")
+        paid_amount = request.POST.get("amount")
+
+        try:
+            loan = LoanApplication.objects.get(tran_id=tran_id)
+            
+            if status == "VALID" and paid_amount:
+                loan.total_paid = (loan.total_paid or Decimal("0.00")) + Decimal(paid_amount)
+                loan.payment_status = "PAID"
+                loan.save()
+            
+            elif status != "VALID":
+                loan.payment_status = "FAILED"
+                loan.save()
+
+        except LoanApplication.DoesNotExist:
+            pass
+
+    return HttpResponse("OK")
+
+from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from xhtml2pdf import pisa
+from decimal import Decimal
+from .models import LoanApplication
+from decimal import Decimal
+from django.shortcuts import render, get_object_or_404
+from .models import LoanApplication
+
+from decimal import Decimal
+from django.db import transaction
+from decimal import Decimal
+from django.db import transaction
+
+from decimal import Decimal
+from django.db import transaction
+from django.utils import timezone
+@csrf_exempt
+def ssl_success(request):
+    tran_id = request.POST.get("tran_id")
+    amount = Decimal(request.POST.get("amount", "0.00"))
+
+    loan = LoanApplication.objects.filter(tran_id=tran_id).first()
+    if not loan:
+        return render(request, "ssl/error.html", {"error": "Loan not found"})
+
+    today = timezone.now().date()
+
+    # 🔒 SAME MONTH PAYMENT BLOCK
+    if loan.last_payment_date:
+        if (
+            loan.last_payment_date.year == today.year
+            and loan.last_payment_date.month == today.month
+        ):
+            return render(request, "ssl/error.html", {
+                "error": "এই মাসের কিস্তি ইতিমধ্যে পরিশোধ করা হয়েছে।"
+            })
+
+    # 🔒 FULLY CLEARED BLOCK
+    if loan.payment_status == "PAID":
+        return render(request, "ssl/error.html", {
+            "error": "এই লোনটি সম্পূর্ণ পরিশোধ করা হয়েছে।"
+        })
+
+    with transaction.atomic():
+        loan.total_paid += amount
+        loan.last_payment_date = today  # ✅ mark this month paid
+
+        if loan.total_paid >= loan.total_payable:
+            loan.total_paid = loan.total_payable
+            loan.status = "Cleared"
+            loan.payment_status = "PAID"
+        else:
+            loan.payment_status = "PENDING"
+
+        loan.save()
+
+    return render(request, "ssl/success.html", {
+        "loan": loan,
+        "total_paid": loan.total_paid,
+        "months_paid": loan.months_paid,
+        "remaining_amount": loan.remaining_amount,
+    })
+
+
+@csrf_exempt
+def receipt_print(request, loan_id): 
+    
+    loan = get_object_or_404(LoanApplication, id=loan_id)
+
+    context = {
+        "loan": loan,
+        "total_paid": loan.total_paid,
+        "months_paid": loan.months_paid,
+        "remaining_amount": loan.remaining_amount,
+    }
+
+    return render(request, "ssl/receipt.html", context)
+
+
+@csrf_exempt
+def ssl_fail(request):
+    return render(request, "ssl/fail.html")
+@csrf_exempt
+def ssl_cancel(request):
+    return render(request, "ssl/cancel.html")
+
+# def register(request):
+#     if request.method == 'POST':
+#         form = UserRegisterForm(request.POST, request.FILES)
+#         if form.is_valid():
+#             user = form.save()
+#             UserVerification.objects.create(
+#                 user=user,
+#                 nid_image=form.cleaned_data['national_id'],
+#                 service_id_image=form.cleaned_data['service_id_card'],
+#                 live_photo=form.cleaned_data['live_photo']
+#             )
+#             from django.contrib.auth import login
+#             login(request, user)
+#             return redirect('dashboard')
+#     else:
+#         form = UserRegisterForm()
+#     return render(request, 'loans/register.html', {'form': form})
+
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from .forms import UserProfileForm  # আপনার ফর্ম ইম্পোর্ট
+# # @login_required
+# def profile_view(request):
+#     return render(request, 'loans/', {
+#         'user': request.user
+#     })
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from .forms import UserProfileForm
+# @login_required 
+@login_required
+def profile_form(request):
+    user = request.user
+
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST, request.FILES, instance=user)
+        if form.is_valid():
+            action = request.POST.get('action')  # কোন বাটন ক্লিক হলো
+            if action == 'save':
+                form.save()
+                messages.success(request, "Profile saved successfully!")
+                return redirect('kyc_upload')  # Save হলে kyc_upload এ
+            elif action == 'edit':
+                return redirect('profile_update')  # Edit হলে profile_update এ
+    else:
+        form = UserProfileForm(instance=user)
+
+    return render(request, 'loans/profile_form.html', {'form': form})
+
+
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .forms import UserProfileForm
+
+@login_required
+def profile_update(request):
+    user = request.user
+
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST, request.FILES, instance=user)
+        if form.is_valid():
+            form.save()
+            return redirect('profile_view')
+    else:
+        form = UserProfileForm(instance=user)
+
+    return render(request, 'loans/profile_update.html', {
+        'form': form
+    })
+
+
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from .forms import UserKycForm
+
+
+@login_required
+def kyc_upload(request):
+    user = request.user
+
+    if request.method == 'POST':
+        form = UserKycForm(request.POST, request.FILES, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Documents uploaded successfully ✅")
+            # 🔹 Redirect to apply_loan after saving
+            return redirect('apply_loan')
+        else:
+            messages.error(request, "Please fix the errors below ❌")
+    else:
+        form = UserKycForm(instance=user)
+
+    return render(request, 'loans/kyc_upload.html', {
+        'form': form
+    })
+
+
+
+#................................
+#...........Admin Dashboard...... 
+#................................ 
+from django.contrib.admin.views.decorators import staff_member_required
+
+# @staff_member_required
+# def admin_dashboard(request):
+#     return render(request, 'admin/dashboard.html')
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.models import User, Group
+from django.contrib import messages
+from django.contrib.auth.decorators import user_passes_test
+from tasks.models import LoanApplication
+from tasks.forms import AssignRoleForm, CreateGroupForm
+
+def is_admin(user):
+    return user.is_superuser  # অথবা আপনার রোল চেক
+
+# @user_passes_test(is_admin, login_url='no-permission')
+def admin_dashboard(request):
+    total_loans = LoanApplication.objects.count()
+    pending_loans = LoanApplication.objects.filter(status='Pending').count()
+    approved_loans = LoanApplication.objects.filter(status='Approved').count()
+    rejected_loans = LoanApplication.objects.filter(status='Rejected').count()
+    cleared_loans = LoanApplication.objects.filter(status='Cleared').count()
+
+    context = {
+        "total_loans": total_loans,
+        "pending_loans": pending_loans,
+        "approved_loans": approved_loans,
+        "rejected_loans": rejected_loans,
+        "cleared_loans": cleared_loans,
+    }
+    return render(request, 'admin/dashboard.html', context)
+
+# @user_passes_test(is_admin, login_url='no-permission')
+def loan_list(request):
+    loans = LoanApplication.objects.select_related('user').all()
+    return render(request, 'admin/loan_list.html', {"loans": loans})
+
+# @user_passes_test(is_admin, login_url='no-permission')
+def loan_detail(request, loan_id):
+    loan = get_object_or_404(LoanApplication, id=loan_id)
+    return render(request, 'admin/loan_detail.html', {"loan": loan})
+
+# @user_passes_test(is_admin, login_url='no-permission')
+def approve_loan(request, loan_id):
+    loan = get_object_or_404(LoanApplication, id=loan_id)
+    loan.status = 'Approved'
+    loan.save()
+    messages.success(request, f"Loan {loan.id} has been approved.")
+    return redirect('loan-list')
+
+
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.models import User, Group
+from .forms import AssignRoleForm, CreateGroupForm
+
+def is_admin(user):
+    return user.is_superuser
+
+
+from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, render, redirect
+from django.contrib import messages
+
+User = get_user_model()
+# @user_passes_test(is_admin, login_url='no-permission')
+def assign_role(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    form = AssignRoleForm()
+    if request.method == 'POST':
+        form = AssignRoleForm(request.POST)
+        if form.is_valid():
+            role = form.cleaned_data.get('role')
+            user.groups.clear()
+            user.groups.add(role)
+            messages.success(request, f"{user.username} has been assigned to {role.name}")
+            return redirect('admin-dashboard')
+    return render(request, 'admin/assign_role.html', {"form": form, "user": user})
+
+# @user_passes_test(is_admin, login_url='no-permission')
+def Create_Group(request):
+    form = CreateGroupForm()
+    if request.method == 'POST':
+        form = CreateGroupForm(request.POST)
+        if form.is_valid():
+            group = form.save()
+            messages.success(request, f"Group {group.name} created successfully")
+            return redirect('create-group')
+    return render(request, 'admin/create_group.html', {"form": form})
+
+# @user_passes_test(is_admin, login_url='no-permission')
+def Group_list(request):
+    groups = Group.objects.prefetch_related('permissions').all()
+    return render(request, 'admin/group_list.html', {"groups": groups})
+
+
+from django.contrib.auth import get_user_model
+from django.contrib.admin.views.decorators import staff_member_required
+
+User = get_user_model()
+
+# @staff_member_required
+def user_list(request):
+    users = User.objects.all()
+    return render(request, 'admin/user_list.html', {'users': users})
+
+
+from django.contrib.auth.decorators import user_passes_test
+from django.shortcuts import render
+from .models import LoanApplication
+
+# শুধু Staff/Admin ইউজারদের জন্য
+
+def all_users_loans_dashboard(request):
+    # সব লোন অ্যাপ্লিকেশন নিয়ে আসছি
+    loans = LoanApplication.objects.select_related('user').order_by('-id')
+    
+    context = {
+        'loans': loans
+    }
+    return render(request, 'admin/all_users_loans_dashboard.html', context)
+
+
+from django.shortcuts import render
+
+def no_permission(request):
+    return render(request, 'admin/no_permission.html')
+
+
+
+
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from .models import User, LoanApplication, UserVerification
+
+# @login_required
+def user_profile(request, user_id):
+    # request.user থেকে ইউজার নিন
+    user = get_object_or_404(User, id=user_id)
+
+    # ইউজারের সমস্ত লোন অ্যাপ্লিকেশন
+    loans = LoanApplication.objects.filter(user=user).order_by('-created_at')
+
+    # ইউজারের ভেরিফিকেশন / ডকুমেন্টস
+    verification = UserVerification.objects.filter(user=user).first()
+
+    context = {
+        'user': user,
+        'loans': loans,
+        'verification': verification,
+    }
+    return render(request, 'admin/user_profile.html', context)
+
+
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from tasks.models import LoanApplication
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from tasks.models import LoanApplication
+
+# Approve লোন
+def approve_loan(request, loan_id):
+    loan = get_object_or_404(LoanApplication, id=loan_id)
+
+    if request.method == "POST" and loan.status == "Pending":
+        loan.status = "Approved"
+        loan.save()
+        messages.success(request, f"Loan #{loan.id} approved successfully.")
+    return redirect("all-loans")  # যেই পেজে তুমি সব লোন দেখাচ্ছো
+
+# Reject লোন
+def reject_loan(request, loan_id):
+    loan = get_object_or_404(LoanApplication, id=loan_id)
+
+    if request.method == "POST" and loan.status == "Pending":
+        loan.status = "Rejected"
+        loan.save()
+        messages.error(request, f"Loan #{loan.id} rejected.")
+    return redirect("all-loans")
+
+
+# @login_required
+# @user_passes_test(is_admin)
+def all_loans(request):
+    loans = LoanApplication.objects.select_related('user').all().order_by('-id')
+    return render(request, 'admin/all_loans.html', {
+        'loans': loans
+    })

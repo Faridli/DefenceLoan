@@ -1,46 +1,94 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h1 class="text-2xl font-bold mb-6 text-center">Admin Dashboard</h1>
+<div class="min-h-screen bg-gray-100 py-10 px-4">
 
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+    <!-- Page Header -->
+    <div class="max-w-7xl mx-auto mb-10 text-center">
+        <h1 class="text-3xl font-extrabold text-gray-800">
+            Admin Dashboard
+        </h1>
+        <p class="text-gray-500 mt-2">
+            Manage loans, users, roles & permissions
+        </p>
+    </div>
 
-    <!-- Loan List -->
-    <a href="{% url 'loan-list' %}" class="bg-gradient-to-r from-blue-500 to-blue-700 text-white p-6 shadow-xl rounded-2xl transform hover:scale-105 transition duration-300 text-center">
-        <h2 class="font-semibold text-lg">Loan List</h2>
-        <p class="mt-2 text-blue-200">View all loans</p>
-    </a>
+    <!-- Dashboard Cards -->
+    <div class="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
 
-    <!-- Create Loan (example: you can link to apply loan page) -->
-    <a href="{% url 'apply_loan' %}" class="bg-gradient-to-r from-green-400 to-green-600 text-white p-6 shadow-xl rounded-2xl transform hover:scale-105 transition duration-300 text-center">
-        <h2 class="font-semibold text-lg">Apply Loan</h2>
-        <p class="mt-2 text-green-100">Create a new loan</p>
-    </a>
+        <!-- Loan List -->
+        <a href="{% url 'loan-list' %}"
+           class="group bg-gradient-to-br to-blue-300 rounded-2xl shadow-lg p-6 hover:shadow-2xl transition duration-300">
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-gray-800">Loan List</h2>
+                <span class="text-blue-500 text-3xl">📄</span>
+            </div>
+            <p class="mt-3 text-gray-500">
+                View & manage all loan applications
+            </p>
+        </a>
 
-    <!-- Approve Loan (just an example card, you might want to link to loan list first) -->
-    <a href="{% url 'loan-list' %}" class="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white p-6 shadow-xl rounded-2xl transform hover:scale-105 transition duration-300 text-center">
-        <h2 class="font-semibold text-lg">Approve Loans</h2>
-        <p class="mt-2 text-yellow-100">Approve pending loans</p>
-    </a>
+        <!-- Apply Loan -->
+        <a href="{% url 'all_users_loans_dashboard' %}"
+           class="group bg-white rounded-2xl shadow-lg p-6 hover:shadow-2xl transition duration-300">
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-gray-800">User Dashboard</h2>
+                <span class="text-green-500 text-3xl">💰</span>
+            </div>
+            <p class="mt-3 text-gray-500">
+                Create a new loan application
+            </p>
+        </a>
 
-    <!-- Assign Role -->
-    <a href="{% url 'assign-role' user.id %}" class="bg-gradient-to-r from-indigo-400 to-indigo-600 text-white p-6 shadow-xl rounded-2xl transform hover:scale-105 transition duration-300 text-center">
-        <h2 class="font-semibold text-lg">Assign Role</h2>
-        <p class="mt-2 text-indigo-100">Manage user roles</p>
-    </a>
+        <!-- Approve Loans -->
+        <a href="{% url 'all_loan' %}"
+           class="group bg-white rounded-2xl shadow-lg p-6 hover:shadow-2xl transition duration-300">
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-gray-800">Approve Loans</h2>
+                <span class="text-yellow-500 text-3xl">✅</span>
+            </div>
+            <p class="mt-3 text-gray-500">
+                Review & approve pending loans
+            </p>
+        </a>
 
-    <!-- Create Group -->
-    <a href="{% url 'create-group' %}" class="bg-gradient-to-r from-pink-400 to-pink-600 text-white p-6 shadow-xl rounded-2xl transform hover:scale-105 transition duration-300 text-center">
-        <h2 class="font-semibold text-lg">Create Group</h2>
-        <p class="mt-2 text-pink-100">Add new user groups</p>
-    </a>
+        <!-- Assign Role -->
+        <a href="{% url 'user-list' %}"
+           class="group bg-white rounded-2xl shadow-lg p-6 hover:shadow-2xl transition duration-300">
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-gray-800">Assign Roles</h2>
+                <span class="text-indigo-500 text-3xl">👤</span>
+            </div>
+            <p class="mt-3 text-gray-500">
+                Manage user roles & permissions
+            </p>
+        </a>
 
-    <!-- Group List -->
-    <a href="{% url 'group-list' %}" class="bg-gradient-to-r from-purple-400 to-purple-600 text-white p-6 shadow-xl rounded-2xl transform hover:scale-105 transition duration-300 text-center">
-        <h2 class="font-semibold text-lg">Group List</h2>
-        <p class="mt-2 text-purple-100">View all groups</p>
-    </a>
+        <!-- Create Group -->
+        <a href="{% url 'create-group' %}"
+           class="group bg-white rounded-2xl shadow-lg p-6 hover:shadow-2xl transition duration-300">
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-gray-800">Create Group</h2>
+                <span class="text-pink-500 text-3xl">➕</span>
+            </div>
+            <p class="mt-3 text-gray-500">
+                Create new permission groups
+            </p>
+        </a>
 
+        <!-- Group List -->
+        <a href="{% url 'group-list' %}"
+           class="group bg-white rounded-2xl shadow-lg p-6 hover:shadow-2xl transition duration-300">
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-gray-800">Group List</h2>
+                <span class="text-purple-500 text-3xl">📋</span>
+            </div>
+            <p class="mt-3 text-gray-500">
+                View & manage existing groups
+            </p>
+        </a>
+
+    </div>
 </div>
 
 {% endblock %}

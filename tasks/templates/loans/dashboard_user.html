@@ -20,9 +20,9 @@
        class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-md shadow">
        Applicant for Credit Loan
     </a>
-    <a href="#"
+    <a href="{% url 'auto_debit_create' %}"
        class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-md shadow">
-       All Bill Pay 
+       Auto debit now
     </a>
 </div>
 
@@ -95,8 +95,8 @@
                 {% else %}
                     -
                 {% endif %}
-            </td>
-
+            </td> 
+           
         </tr>
         {% empty %}
         <tr>

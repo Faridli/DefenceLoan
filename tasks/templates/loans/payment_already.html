@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Payment Already Made{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto mt-10 p-6 bg-yellow-100 rounded-md shadow text-center">
+    {% comment %} <h2 class="text-2xl font-bold text-yellow-800 mb-4">You have already paid this month's.</h2> {% endcomment %}
+    {% comment %} <p class="mb-6 text-gray-700">Do you want to make another payment this month?</p> {% endcomment %}
+    <p class="mb-6 text-gray-700">Do you want to make payment this month?</p>
+
+    <form method="post" action="{% url 'ssl_payment' loan.id %}">
+        {% csrf_token %}
+        <button type="submit" name="force" value="yes"
+                class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md mr-3">
+            Yes
+        </button>
+        <a href="{% url 'dashboard_user' %}" 
+           class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md">
+            No
+        </a>
+    </form>
+</div>
+{% endblock %}

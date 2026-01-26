@@ -1,44 +1,67 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth import login
-from django.contrib.auth.decorators import login_required
-from .forms import UserRegisterForm, ForgotPasswordForm, ResetPasswordForm
-from tasks.models import User
+# =========================
+# Imports  Farid9818@
+# =========================
 
+from decimal import Decimal
+import random
 
 from django.shortcuts import render, redirect
-from django.contrib.auth import login
 from django.contrib import messages
-from .forms import UserRegisterForm
-from django.contrib.auth.models import User
-from django.contrib.sites.shortcuts import get_current_site
-from django.template.loader import render_to_string
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding import force_bytes, force_str
+from django.contrib.auth import (
+    authenticate,
+    login,
+    get_user_model,
+)
+from django.contrib.auth import get_user_model 
+from django.contrib.auth.decorators import login_required, user_passes_test 
+from django.contrib.auth.models import User,Group 
 from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import EmailMessage
-from django.views.decorators.cache import never_cache 
-from tasks.forms import UserProfileForm 
-from django.shortcuts import render, redirect
-from django.contrib import messages
 from django.contrib.sites.shortcuts import get_current_site
-from django.utils.http import urlsafe_base64_encode
+from django.core.mail import EmailMessage
+from django.http import JsonResponse
+from django.template.loader import render_to_string
+from django.utils import timezone 
+from tasks.models import User
 from django.utils.encoding import force_bytes
-from django.core.mail import EmailMessage
-from django.template.loader import render_to_string
-from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import (
+    urlsafe_base64_encode,
+    urlsafe_base64_decode,
+)
+from django.views.decorators.cache import never_cache
 
-from users.forms import UserRegisterForm
-from tasks.models import User
+from users.forms import (
+    UserRegisterForm,
+    ForgotPasswordForm,
+    ResetPasswordForm,
+)
+from tasks.forms import UserProfileForm
+from tasks.models import (
+    User as TaskUser,
+    OTPVerification,
+    LoanApplication,
+    InterestRate,
+)
+from .models import LoanVerification
+from users.forms import LoanApplyForm
+
+
+def is_client(request):
+    return request.user.is_authenticated and request.user.role == 'client'
+
+# =========================
+# User Registration
+# =========================
+# লাগবে না
 def register_account(request):
     if request.method == 'POST':
         form = UserRegisterForm(request.POST)
 
         if form.is_valid():
-            user = form.save(commit=False)   # form already hashed password
+            user = form.save(commit=False)
             user.is_active = False
             user.save()
 
-            # send activation email
+            # Send activation email
             current_site = get_current_site(request)
             mail_subject = 'Activate your account'
             message = render_to_string('accounts/acc_active_email.html', {
@@ -49,7 +72,6 @@ def register_account(request):
             })
 
             EmailMessage(mail_subject, message, to=[user.email]).send()
-
             messages.success(request, "Check your email to activate account")
             return redirect('login_user')
     else:
@@ -58,19 +80,20 @@ def register_account(request):
     return render(request, 'accounts/register_account.html', {'form': form})
 
 
-from django.contrib.auth import get_user_model
-from django.utils.http import urlsafe_base64_decode
-from django.contrib.auth.tokens import default_token_generator
-from django.shortcuts import redirect
-from django.contrib import messages
+# =========================
+# Account Activation
+# =========================
 
-User = get_user_model()
+UserModel = get_user_model()
 
+
+@never_cache
+@login_required
 def activate(request, uidb64, token):
     try:
         uid = urlsafe_base64_decode(uidb64).decode()
-        user = User.objects.get(pk=uid)
-    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = UserModel.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, UserModel.DoesNotExist):
         user = None
 
     if user is not None and default_token_generator.check_token(user, token):
@@ -82,10 +105,12 @@ def activate(request, uidb64, token):
         messages.error(request, 'সক্টিভেশন লিঙ্কটি অবৈধ।')
         return redirect('register_user')
 
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login
-from django.contrib import messages
-@never_cache 
+
+# =========================
+# Username / Password Login (Step 0)
+# =========================
+# লাগবে না।
+# @user_passes_test(lambda u: u.is_client, login_url='no-permission')
 def login_account(request):
     if request.method == "POST":
         username = request.POST.get("username")
@@ -96,54 +121,25 @@ def login_account(request):
 
         if user is not None:
             if user.is_active:
-                # login(request, user) 
-                # Session এ user id রাখুন
                 request.session["login_user_id"] = user.id
 
-                # যদি ?next= থাকে, সেখানে যাবে
                 if next_url:
-                    # return redirect(next_url)
                     request.session["next_url"] = next_url
 
-                # না থাকলে dashboard এ যাবে
                 return redirect("otp_login")
             else:
                 messages.error(request, "Your account is not activated.")
         else:
             messages.error(request, "Invalid username or password.")
 
-    # GET request এ ?next পাঠানো
     next_url = request.GET.get("next", "")
     return render(request, "accounts/user_login.html", {"next": next_url})
 
 
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.contrib.auth import login
-from django.utils import timezone
-import random
-
-from tasks.models import User, OTPVerification
-
-
 # =========================
-# Step 1: Phone Login → Send OTP
+# OTP Login – Step 1 (Send OTP)
 # =========================
-import random
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.utils import timezone
-from django.contrib.auth import login
-from django.http import JsonResponse
-from django.views.decorators.cache import never_cache
-from django.contrib.auth.models import User
-
-from tasks.models import OTPVerification
-
-
-# =========================
-# STEP 1: Phone → Send OTP (EMAIL)
-# =========================
+# লাগবে না
 def otp_login(request):
     if request.method == "POST":
         phone = request.POST.get("phone")
@@ -158,27 +154,23 @@ def otp_login(request):
             messages.error(request, "এই একাউন্টে কোনো ইমেইল যুক্ত নেই")
             return redirect("otp_login")
 
-        # পুরানো OTP invalid
         OTPVerification.objects.filter(
             user=user,
             purpose="login",
             is_verified=False
         ).update(is_verified=True)
 
-        # OTP generate
         otp = str(random.randint(100000, 999999))
 
         OTPVerification.objects.create(
             user=user,
             otp=otp,
             purpose="login",
-            expires_at=timezone.now() + timezone.timedelta(minutes=1)
+            expires_at=timezone.now() + timezone.timedelta(minutes=4)
         )
 
-        # session এ user রাখা
         request.session["login_user_id"] = user.id
 
-        # ✅ EMAIL এ OTP পাঠানো
         user.email_user(
             subject="Your Login OTP",
             message=f"""
@@ -192,14 +184,17 @@ If you did not request this, please ignore this email.
         )
 
         messages.success(request, "OTP আপনার ইমেইলে পাঠানো হয়েছে")
-        return redirect("otp_verify") 
+        return redirect("otp_verify")
 
     return render(request, "otp/otp_login.html")
 
 
 # =========================
-# STEP 2: Verify OTP → Login
+# OTP Login – Step 2 (Verify OTP)
 # =========================
+
+# লাগবে না 
+# @user_passes_test(is_client, login_url='admin/no-permission.html')
 def verify_login_otp(request):
     if request.method == "POST":
         otp = request.POST.get("otp")
@@ -227,12 +222,9 @@ def verify_login_otp(request):
                 messages.error(request, "Your account is not activated.")
                 return redirect("otp_login")
 
-            # ✅ Login
             login(request, user)
 
-            # ✅ next parameter handle
             next_url = request.GET.get("next") or request.session.get("next")
-
             if next_url:
                 return redirect(next_url)
 
@@ -246,9 +238,11 @@ def verify_login_otp(request):
 
 
 # =========================
-# STEP 3: Resend OTP (EMAIL)
+# OTP Login – Step 3 (Resend OTP)
 # =========================
-@never_cache
+
+
+# লাগবে না
 def resend_login_otp(request):
     user_id = request.session.get("login_user_id")
 
@@ -281,10 +275,11 @@ def resend_login_otp(request):
 
 
 # =========================
-# Browser–1: Register / Update Profile
+# Register / Update Profile
 # =========================
-@login_required 
-@never_cache 
+
+@login_required
+@never_cache
 def register_profile(request):
     if request.method == 'POST':
         form = UserRegisterForm(request.POST, request.FILES, instance=request.user)
@@ -297,20 +292,13 @@ def register_profile(request):
     return render(request, 'accounts/register_profile.html', {'form': form})
 
 
-
-from django.shortcuts import render, redirect
-from django.contrib.auth import get_user_model
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from .forms import ForgotPasswordForm, ResetPasswordForm
-
-User = get_user_model()
-
-
 # =========================
-# 🔐 Forgot Password
+# Forgot Password
 # =========================
-@never_cache 
+
+
+@never_cache
+# @login_required লাগবেন না।
 def forgot_password(request):
     if request.method == 'POST':
         form = ForgotPasswordForm(request.POST)
@@ -318,15 +306,12 @@ def forgot_password(request):
             email = form.cleaned_data['email']
 
             try:
-                user = User.objects.get(email=email)
-                # Session এ রাখুন
+                user = UserModel.objects.get(email=email)
                 request.session['reset_email'] = email
                 messages.success(request, 'Password reset link ready! Proceed to reset.')
                 return redirect('reset_password')
-
-            except User.DoesNotExist:
+            except UserModel.DoesNotExist:
                 messages.error(request, 'No user found with this email.')
-
     else:
         form = ForgotPasswordForm()
 
@@ -334,9 +319,10 @@ def forgot_password(request):
 
 
 # =========================
-# 🔁 Reset Password
-# ========================= 
-@never_cache 
+# Reset Password
+# =========================
+
+# লাগবে না
 def reset_password(request):
     email = request.session.get('reset_email')
 
@@ -345,8 +331,8 @@ def reset_password(request):
         return redirect('forgot_password')
 
     try:
-        user = User.objects.get(email=email)
-    except User.DoesNotExist:
+        user = UserModel.objects.get(email=email)
+    except UserModel.DoesNotExist:
         messages.error(request, "User not found. Please try again.")
         return redirect('forgot_password')
 
@@ -362,7 +348,6 @@ def reset_password(request):
                 user.set_password(password)
                 user.save()
                 messages.success(request, "Password successfully reset! You can now login.")
-                # Session clean up
                 del request.session['reset_email']
                 return redirect('login_user')
     else:
@@ -371,18 +356,17 @@ def reset_password(request):
     return render(request, 'accounts/reset_password.html', {'form': form})
 
 
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-from .models import LoanVerification
+# =========================
+# Bank / Recipient Account Verification
+# =========================
 
-@never_cache 
+@never_cache
 @login_required
 def Recipient_Account(request):
-    # Check if already submitted
     try:
         verification = LoanVerification.objects.get(user=request.user)
         if verification.submitted:
-            return redirect('dashboard_user')  # আগে submit করা থাকলে redirect
+            return redirect('dashboard_user')
     except LoanVerification.DoesNotExist:
         verification = None
 
@@ -393,14 +377,18 @@ def Recipient_Account(request):
         routing_number = request.POST.get("routing_number")
         declaration = request.POST.get("declaration")
 
-        if not ( bank_name and account_name and account_number and routing_number):
-            return render(request, "accounts/bank_verify.html", {"error": "সব তথ্য অবশ্যই পূরণ করতে হবে।"})
-        if declaration != "on":
-            return render(request, "accounts/bank_verify.html", {"error": "আপনাকে ঘোষণা স্বীকার করতে হবে।"})
+        if not (bank_name and account_name and account_number and routing_number):
+            return render(request, "accounts/bank_verify.html", {
+                "error": "সব তথ্য অবশ্যই পূরণ করতে হবে।"
+            })
 
-        # Save
+        if declaration != "on":
+            return render(request, "accounts/bank_verify.html", {
+                "error": "আপনাকে ঘোষণা স্বীকার করতে হবে।"
+            })
+
         if verification is None:
-            verification = LoanVerification.objects.create(
+            LoanVerification.objects.create(
                 user=request.user,
                 bank_name=bank_name,
                 account_name=account_name,
@@ -418,21 +406,20 @@ def Recipient_Account(request):
             verification.submitted = True
             verification.save()
 
-        return redirect("dashboard_user")  # Success
+        return redirect("dashboard_user")
 
     return render(request, "accounts/bank_verify.html")
 
 
+# =========================
+# Interest Rate & Loan Apply
+# =========================
 
-from decimal import Decimal
-from django.shortcuts import render, redirect
-from tasks.models import LoanApplication, InterestRate
-from users.forms import LoanApplyForm
-
-
+@never_cache
+# @login_required লাগবে না।
 def Interest_rate(request):
     active_rate = InterestRate.objects.filter(is_active=True).first()
-    interest_rate = active_rate.rate if active_rate else Decimal("12.00")  # default
+    interest_rate = active_rate.rate if active_rate else Decimal("12.00")
 
     monthly_installment = None
     total_payable = None
@@ -443,13 +430,12 @@ def Interest_rate(request):
         if form.is_valid():
             loan = form.save(commit=False)
             loan.user = request.user
-            loan.interest_rate = interest_rate  # lock system rate
+            loan.interest_rate = interest_rate
             loan.save()
             return redirect('dashboard_user')
     else:
         form = LoanApplyForm()
 
-    # যদি ইউজার input দেয় তাহলে auto calculate দেখানো
     amount = request.GET.get("amount")
     duration = request.GET.get("duration_months")
 
@@ -461,7 +447,7 @@ def Interest_rate(request):
             total_interest = (yearly_interest / 12) * duration
             total_payable = amount + total_interest
             monthly_installment = total_payable / duration
-        except:
+        except Exception:
             amount = duration = None
 
     context = {
@@ -471,7 +457,7 @@ def Interest_rate(request):
         "total_payable": total_payable,
         "total_interest": total_interest,
         "amount_input": amount,
-        "duration_input": duration
+        "duration_input": duration,
     }
-    return render(request, "interest_rate/rate.html", context)
 
+    return render(request, "interest_rate/rate.html", context)
