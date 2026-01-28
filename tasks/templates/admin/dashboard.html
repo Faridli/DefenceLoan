@@ -1,94 +1,50 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="min-h-screen bg-gray-100 py-10 px-4">
+  <div class="flex">
+    <aside class="w-64 bg-gray-900 text-gray-100 h-screen p-6">
+      <h2 class="text-xl font-bold mb-6">Admin Dashboard</h2>
+      <nav class="space-y-3">
 
-    <!-- Page Header -->
-    <div class="max-w-7xl mx-auto mb-10 text-center">
-        <h1 class="text-3xl font-extrabold text-gray-800">
-            Admin Dashboard
-        </h1>
-        <p class="text-gray-500 mt-2">
-            Manage loans, users, roles & permissions
-        </p>
-    </div>
+        <!-- Accounts Menu -->
+        <div class="space-y-1">
+          <button class="menu-btn w-full text-left px-3 py-2 rounded hover:bg-gray-900 flex justify-between items-center">
+            Accounts <span>&gt;</span>
+          </button>
+          <div class="submenu ml-4 mt-1 space-y-1 hidden">
+            <a href="{% url 'all_loan' %}" class="block px-2 py-1 rounded hover:bg-gray-900">Approve Loans &gt;</a>
+            <a href="{% url 'user-list' %}" class="block px-2 py-1 rounded hover:bg-gray-900">Assign Roles &gt;</a>
+            <a href="{% url 'create-group' %}" class="block px-2 py-1 rounded hover:bg-gray-900">Create Group &gt;</a>
+            <a href="{% url 'group-list' %}" class="block px-2 py-1 rounded hover:bg-gray-900">Group List &gt;</a>
+          </div>
+        </div>
 
-    <!-- Dashboard Cards -->
-    <div class="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Users Menu -->
+        <div class="space-y-1">
+          <button class="menu-btn w-full text-left px-3 py-2 rounded hover:bg-gray-900 flex justify-between items-center">
+            Users<span>&gt;</span>
+          </button>
+          <div class="submenu ml-4 mt-1 space-y-1 hidden">
+            <a href="{% url 'all_users_loans_dashboard' %}" class="block px-2 py-1 rounded hover:bg-gray-900">Dashboard &gt;</a>
+            <a href="{% url 'loan-list' %}" class="block px-2 py-1 rounded hover:bg-gray-900">Loan List &gt;</a>
+            <a href="#" class="block px-2 py-1 rounded hover:bg-gray-900">credit loans &gt;</a>
+          </div>
+        </div>
 
-        <!-- Loan List -->
-        <a href="{% url 'loan-list' %}"
-           class="group bg-gradient-to-br to-blue-300 rounded-2xl shadow-lg p-6 hover:shadow-2xl transition duration-300">
-            <div class="flex items-center justify-between">
-                <h2 class="text-lg font-semibold text-gray-800">Loan List</h2>
-                <span class="text-blue-500 text-3xl">📄</span>
-            </div>
-            <p class="mt-3 text-gray-500">
-                View & manage all loan applications
-            </p>
-        </a>
+      </nav>
+    </aside>
+  </div>
 
-        <!-- Apply Loan -->
-        <a href="{% url 'all_users_loans_dashboard' %}"
-           class="group bg-white rounded-2xl shadow-lg p-6 hover:shadow-2xl transition duration-300">
-            <div class="flex items-center justify-between">
-                <h2 class="text-lg font-semibold text-gray-800">User Dashboard</h2>
-                <span class="text-green-500 text-3xl">💰</span>
-            </div>
-            <p class="mt-3 text-gray-500">
-                Create a new loan application
-            </p>
-        </a>
+  <!-- JS -->
+  <script>
+    const buttons = document.querySelectorAll('.menu-btn');
 
-        <!-- Approve Loans -->
-        <a href="{% url 'all_loan' %}"
-           class="group bg-white rounded-2xl shadow-lg p-6 hover:shadow-2xl transition duration-300">
-            <div class="flex items-center justify-between">
-                <h2 class="text-lg font-semibold text-gray-800">Approve Loans</h2>
-                <span class="text-yellow-500 text-3xl">✅</span>
-            </div>
-            <p class="mt-3 text-gray-500">
-                Review & approve pending loans
-            </p>
-        </a>
-
-        <!-- Assign Role -->
-        <a href="{% url 'user-list' %}"
-           class="group bg-white rounded-2xl shadow-lg p-6 hover:shadow-2xl transition duration-300">
-            <div class="flex items-center justify-between">
-                <h2 class="text-lg font-semibold text-gray-800">Assign Roles</h2>
-                <span class="text-indigo-500 text-3xl">👤</span>
-            </div>
-            <p class="mt-3 text-gray-500">
-                Manage user roles & permissions
-            </p>
-        </a>
-
-        <!-- Create Group -->
-        <a href="{% url 'create-group' %}"
-           class="group bg-white rounded-2xl shadow-lg p-6 hover:shadow-2xl transition duration-300">
-            <div class="flex items-center justify-between">
-                <h2 class="text-lg font-semibold text-gray-800">Create Group</h2>
-                <span class="text-pink-500 text-3xl">➕</span>
-            </div>
-            <p class="mt-3 text-gray-500">
-                Create new permission groups
-            </p>
-        </a>
-
-        <!-- Group List -->
-        <a href="{% url 'group-list' %}"
-           class="group bg-white rounded-2xl shadow-lg p-6 hover:shadow-2xl transition duration-300">
-            <div class="flex items-center justify-between">
-                <h2 class="text-lg font-semibold text-gray-800">Group List</h2>
-                <span class="text-purple-500 text-3xl">📋</span>
-            </div>
-            <p class="mt-3 text-gray-500">
-                View & manage existing groups
-            </p>
-        </a>
-
-    </div>
-</div>
+    buttons.forEach(btn=> {
+      btn.addEventListener('click', () => {
+        const submenu = btn.nextElementSibling;
+        submenu.classList.toggle('hidden');
+      });
+    });
+  </script>
 
 {% endblock %}

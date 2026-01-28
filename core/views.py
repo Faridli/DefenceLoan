@@ -15,7 +15,12 @@ def logout_view(request):
     # ইউজারকে লগআউট করা
     logout(request)
     # লগআউট হওয়ার পরে সুন্দর লগআউট পেজ দেখানো
-    return render(request, 'logout/logout.html')
-@never_cache
-def no_permission(request): 
-    return render(request,'no_permission.html')
+  
+
+
+
+  
+
+
+
+

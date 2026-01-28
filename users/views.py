@@ -111,6 +111,10 @@ def activate(request, uidb64, token):
 # =========================
 # লাগবে না।
 # @user_passes_test(lambda u: u.is_client, login_url='no-permission')
+from django.contrib.auth import authenticate, login
+from django.shortcuts import render, redirect
+from django.contrib import messages
+
 def login_account(request):
     if request.method == "POST":
         username = request.POST.get("username")
@@ -121,11 +125,15 @@ def login_account(request):
 
         if user is not None:
             if user.is_active:
-                request.session["login_user_id"] = user.id
+                # অ্যাডমিন হলে সরাসরি লগইন
+                if user.is_superuser:
+                    login(request, user)
+                    return redirect("admin-dashboard")  # সরাসরি অ্যাডমিন ড্যাশবোর্ড
 
+                # সাধারণ ব্যবহারকারীর জন্য OTP লগইন
+                request.session["login_user_id"] = user.id
                 if next_url:
                     request.session["next_url"] = next_url
-
                 return redirect("otp_login")
             else:
                 messages.error(request, "Your account is not activated.")
@@ -461,3 +469,15 @@ def Interest_rate(request):
     }
 
     return render(request, "interest_rate/rate.html", context)
+
+
+
+
+
+
+
+
+
+
+
+
