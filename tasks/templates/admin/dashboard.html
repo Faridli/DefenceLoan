@@ -1,50 +1,10 @@
-{% extends "base.html" %}
+{% extends "base.html" %} 
+
+{% block sidebar %}
+    {% include "admin/board.html " %} 
+{% endblock %}
+
 {% block content %}
 
-  <div class="flex">
-    <aside class="w-64 bg-gray-900 text-gray-100 h-screen p-6">
-      <h2 class="text-xl font-bold mb-6">Admin Dashboard</h2>
-      <nav class="space-y-3">
-
-        <!-- Accounts Menu -->
-        <div class="space-y-1">
-          <button class="menu-btn w-full text-left px-3 py-2 rounded hover:bg-gray-900 flex justify-between items-center">
-            Accounts <span>&gt;</span>
-          </button>
-          <div class="submenu ml-4 mt-1 space-y-1 hidden">
-            <a href="{% url 'all_loan' %}" class="block px-2 py-1 rounded hover:bg-gray-900">Approve Loans &gt;</a>
-            <a href="{% url 'user-list' %}" class="block px-2 py-1 rounded hover:bg-gray-900">Assign Roles &gt;</a>
-            <a href="{% url 'create-group' %}" class="block px-2 py-1 rounded hover:bg-gray-900">Create Group &gt;</a>
-            <a href="{% url 'group-list' %}" class="block px-2 py-1 rounded hover:bg-gray-900">Group List &gt;</a>
-          </div>
-        </div>
-
-        <!-- Users Menu -->
-        <div class="space-y-1">
-          <button class="menu-btn w-full text-left px-3 py-2 rounded hover:bg-gray-900 flex justify-between items-center">
-            Users<span>&gt;</span>
-          </button>
-          <div class="submenu ml-4 mt-1 space-y-1 hidden">
-            <a href="{% url 'all_users_loans_dashboard' %}" class="block px-2 py-1 rounded hover:bg-gray-900">Dashboard &gt;</a>
-            <a href="{% url 'loan-list' %}" class="block px-2 py-1 rounded hover:bg-gray-900">Loan List &gt;</a>
-            <a href="#" class="block px-2 py-1 rounded hover:bg-gray-900">credit loans &gt;</a>
-          </div>
-        </div>
-
-      </nav>
-    </aside>
-  </div>
-
-  <!-- JS -->
-  <script>
-    const buttons = document.querySelectorAll('.menu-btn');
-
-    buttons.forEach(btn=> {
-      btn.addEventListener('click', () => {
-        const submenu = btn.nextElementSibling;
-        submenu.classList.toggle('hidden');
-      });
-    });
-  </script>
 
 {% endblock %}

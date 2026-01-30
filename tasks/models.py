@@ -198,6 +198,7 @@ from django.core.exceptions import ValidationError
 
 
 class LoanApplication(models.Model):
+    comment = models.TextField(blank=True, null=True)
 
     STATUS_CHOICES = (
         ('Pending', 'Pending'),

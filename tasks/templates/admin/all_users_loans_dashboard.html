@@ -1,15 +1,18 @@
-{% extends "base.html" %}
+{% extends "base.html" %} 
+
+{% block sidebar %}
+    {% include "admin/board.html " %} 
+{% endblock %}
+
 {% block content %}
 
-<div class="max-w-6xl mx-auto mt-10 p-6 bg-white shadow-lg rounded-lg">
-    <h1 class="text-2xl font-bold mb-6">All Loan Applications</h1>
-
+<div class="max-w-6xl mx-auto p-6 bg-white shadow-lg rounded-lg">
+   
     <table class="w-full table-auto border-collapse border border-gray-300">
         <thead>
             <tr class="bg-gray-100">
                 <th class="border border-gray-300 px-4 py-2">Ser</th>
                 <th class="border border-gray-300 px-4 py-2">User</th>
-                <th class="border border-gray-300 px-4 py-2">Email</th>
                 <th class="border border-gray-300 px-4 py-2">Phone</th>
                 <th class="border border-gray-300 px-4 py-2">Loan Amount</th>
                 <th class="border border-gray-300 px-4 py-2">Status</th>
@@ -22,7 +25,6 @@
             <tr class="text-center">
                 <td class="border border-gray-300 px-4 py-2">{{ forloop.counter }}</td>
                 <td class="border border-gray-300 px-4 py-2">{{ loan.user.username }}</td>
-                <td class="border border-gray-300 px-4 py-2">{{ loan.user.email }}</td>
                 <td class="border border-gray-300 px-4 py-2">{{ loan.user.phone }}</td>
                 <td class="border border-gray-300 px-4 py-2">{{ loan.amount }}</td>
                 <td class="border border-gray-300 px-4 py-2">{{ loan.status }}</td>

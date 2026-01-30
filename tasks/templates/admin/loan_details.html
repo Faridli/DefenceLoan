@@ -1,0 +1,250 @@
+{% extends "base.html" %} 
+
+{% block sidebar %}
+    {% include "admin/board.html " %} 
+{% endblock %}
+
+{% block content %}
+
+<style>
+  .loan-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0px;
+    background: #fff;
+  }
+  .loan-table th, .loan-table td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: center;
+  }
+  .loan-table th {
+    background: #f4f6f8;
+    font-weight: 600;
+  }
+
+  .status-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .pending { background: #fff3cd; color: #856404; }
+  .approved { background: #d1ecf1; color: #0c5460; }
+  .rejected { background: #f8d7da; color: #721c24; }
+  .cleared { background: #d4edda; color: #155724; }
+
+  select {
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .back-btn {
+    margin-top: 15px;
+    display: inline-block;
+    background: #6c757d;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+  }
+</style>
+
+<h2>Loan Details — {{ loan.user.username }}</h2>
+
+<table class="loan-table">
+  <thead>
+    <tr>
+      <th>Monthly EMI</th>
+      <th>Total Paid</th>
+      <th>Months Paid</th>
+      <th>Remaining</th>
+      <th>Acction</th>
+      <th>Rmk</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>{{ loan.monthly_installment }}</td>
+      <td>{{ loan.total_paid }}</td>
+      <td>{{ loan.months_paid }}</td>
+      <td>{{ loan.remaining_amount }}</td>
+
+      <td>
+        {% if loan.display_status == 'Cleared' %}
+          <span class="status-badge cleared">Cleared</span>
+
+        {% elif loan.status == 'Approved' %}
+          <span class="status-badge approved">Approved</span>
+
+        {% else %}
+          <form method="post">
+            {% csrf_token %}
+            <select name="status" onchange="this.form.submit()">
+              {% for key, value in loan.STATUS_CHOICES %}
+                <option value="{{ key }}" {% if loan.status == key %}selected{% endif %}>
+                  {{ value }}
+                </option>
+              {% endfor %}
+            </select>
+          </form>
+        {% endif %}
+      </td> 
+
+      <!-- auto save -->
+       <td>
+  <input type="text"
+         value="{{ loan.comment|default:'' }}"
+         onblur="saveComment(this)"
+         data-loan-id="{{ loan.id }}"
+         placeholder="মন্তব্য..."
+         style="padding:5px 8px; border:1px solid #ccc; border-radius:6px; width:150px;">
+</td>
+
+
+    </tr>
+  </tbody>
+</table>
+
+<a href="{% url 'all_loans' %}" class="back-btn">⬅ Back</a> 
+
+
+
+
+
+
+
+<script>
+function saveComment(input) {
+    const loanId = input.getAttribute("data-loan-id");
+    const comment = input.value;
+
+    fetch("{% url 'save_comment' %}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({
+            loan_id: loanId,
+            comment: comment
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Saved:", data.status);
+    });
+}
+</script>
+
+
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+{% comment %} {% extends "base.html" %}
+{% block content %}
+
+<style>
+  .loan-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: #fff;
+  }
+
+  .loan-table th, .loan-table td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: center;
+  }
+
+  .loan-table th {
+    background: #f4f6f8;
+    font-weight: 600;
+  }
+
+  .status-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .pending { background: #fff3cd; color: #856404; }
+  .approved { background: #d1ecf1; color: #0c5460; }
+  .rejected { background: #f8d7da; color: #721c24; }
+  .cleared { background: #d4edda; color: #155724; }
+
+  select {
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  select:disabled {
+    background: #eee;
+    cursor: not-allowed;
+  }
+</style>
+
+<h2>Loan Management</h2>
+
+<table class="loan-table">
+  <thead>
+    <tr>
+      
+      <th>Monthly EMI</th>
+      <th>Total Paid</th>
+      <th>Months Paid</th>
+      <th>Remaining</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+
+  <tbody>
+  {% for loan in loans %}
+    <tr>
+      
+      <td>{{ loan.monthly_installment }}</td>
+      <td>{{ loan.total_paid }}</td>
+      <td>{{ loan.months_paid }}</td>
+      <td>{{ loan.remaining_amount }}</td>
+
+      <td>
+        {% if loan.display_status == 'Cleared' %}
+          <span class="status-badge cleared">Cleared</span>
+        {% elif loan.status == 'Approved' %}
+          <span class="status-badge approved">Approved</span>
+        {% else %}
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="loan_id" value="{{ loan.id }}">
+            <select name="status" onchange="this.form.submit()">
+              {% for key, value in loan.STATUS_CHOICES %}
+                <option value="{{ key }}" {% if loan.status == key %}selected{% endif %}>
+                  {{ value }}
+                </option>
+              {% endfor %}
+            </select>
+          </form>
+        {% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %} {% endcomment %}

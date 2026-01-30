@@ -1,0 +1,103 @@
+
+<!-- ===== Sidebar ===== -->
+<aside class="fixed left-0 top-0 bottom-0 w-64 bg-gray-900 text-white flex flex-col">
+
+    <div class="p-8 flex flex-col h-full">
+
+        <h2 class="text-4xl font-extrabold mb-6 flex items-center">
+            <span class="text-blue-500">A</span>dmin
+        </h2>
+
+
+        <nav class="space-y-3 flex-1 overflow-y-auto relative">
+
+            <!-- Accounts -->
+            <div class="relative">
+                <button type="button"
+                        class="menu-btn w-full text-gray-500 text-left px-3 py-2 rounded hover:bg-gray-800 flex items-center gap-2">
+                    <span class="arrow transition-transform duration-200">&gt;</span>
+                    <span>Accounts</span>
+                </button>
+
+                <!-- Submenu overlay -->
+                <div class="submenu absolute left-full top-0 ml-1 w-48 bg-gray-800 p-2 rounded shadow hidden z-10">
+                    <a href="{% url 'all_loans' %}" class="block px-3 py-1 rounded text-gray-500 hover:bg-gray-700">&gt; Loan Management</a>
+                    <a href="{% url 'user-list' %}" class="block px-3 py-1 rounded text-gray-500 hover:bg-gray-700">&gt; Assign Roles</a>
+                    <a href="{% url 'create-group' %}" class="block px-3 py-1 rounded text-gray-500 hover:bg-gray-700">&gt; Create Group</a>
+                    <a href="{% url 'group-list' %}" class="block px-3 py-1 rounded text-gray-500 hover:bg-gray-700">&gt; Group List</a>
+                </div>
+            </div>
+
+            <!-- Users -->
+            <div class="relative mt-4">
+                <button type="button"
+                        class="menu-btn w-full text-gray-500 text-left px-3 py-2 rounded hover:bg-gray-800 flex items-center gap-2">
+                    <span class="arrow transition-transform duration-200">&gt;</span>
+                    <span>Users</span>
+                </button>
+
+                <div class="submenu absolute left-full top-0 ml-1 w-48 bg-gray-800 p-2 rounded shadow hidden z-10">
+                    <a href="{% url 'all_users_loans_dashboard' %}" class="block px-3 py-1 rounded text-gray-500 hover:bg-gray-700">&gt; Dashboard</a>
+                    <a href="{% url 'loan-list' %}" class="block px-3 py-1 rounded text-gray-500 hover:bg-gray-700">&gt; Loan List</a>
+                    <a href="{% url 'auto_debit_list' %}" class="block px-3 py-1 rounded text-gray-500 hover:bg-gray-700">&gt; Auto-Debit list</a>
+                    <a href="#" class="block px-3 py-1 rounded text-gray-500 hover:bg-gray-700">&gt; Credit Loans</a>
+                </div>
+            </div>
+
+            <!-- Future Plan -->
+            <div class="relative mt-4">
+                <button type="button"
+                        class="menu-btn w-full text-gray-500 text-left px-3 py-2 rounded hover:bg-gray-800 flex items-center gap-2">
+                    <span class="arrow transition-transform duration-200">&gt;</span>
+                    <span>Future Plan</span>
+                </button>
+
+                <div class="submenu absolute left-full top-0 ml-1 w-48 bg-gray-800 p-2 rounded shadow hidden z-10">
+                    <a href="#" class="block px-3 py-1 rounded text-gray-500 hover:bg-gray-700">&gt;Sub_Admin</a>
+                    <a href="#" class="block px-3 py-1 rounded text-gray-500 hover:bg-gray-700">&gt;Staff</a>
+                    <a href="#" class="block px-3 py-1 rounded text-gray-500 hover:bg-gray-700">&gt;Client</a>
+                </div>
+            </div>
+
+            <!-- Other Force -->
+            <div class="relative mt-4">
+                <button type="button"
+                        class="menu-btn w-full text-gray-500 text-left px-3 py-2 rounded hover:bg-gray-800 flex items-center gap-2">
+                    <span class="arrow transition-transform duration-200">&gt;</span>
+                    <span>Other Force</span>
+                </button>
+
+                <div class="submenu absolute left-full top-0 ml-1 w-48 bg-gray-800 p-2 rounded shadow hidden z-10">
+                    <a href="#" class="block px-3 py-1 rounded text-gray-500 hover:bg-gray-700">&gt;Sub_Admin</a>
+                    <a href="#" class="block px-3 py-1 rounded text-gray-500 hover:bg-gray-700">&gt;Staff</a>
+                    <a href="#" class="block px-3 py-1 rounded text-gray-500 hover:bg-gray-700">&gt;Client</a>
+                </div>
+            </div>
+            <!-- loan calculate -->
+            <div class="relative mt-3 block px-3 py-1 rounded text-gray-500 hover:bg-gray-900">
+                <a href="{% url 'interest_rate' %}">&gt;Loan Calculator</a>
+            </div>
+
+        </nav>
+
+        
+    </div>
+
+</aside>
+
+<!-- Sidebar Script -->
+<script>
+document.querySelectorAll('.menu-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+        e.preventDefault();
+        const submenu = btn.nextElementSibling;
+        const arrow = btn.querySelector('.arrow');
+
+        // Toggle submenu
+        submenu.classList.toggle('hidden');
+
+        // Rotate arrow
+        arrow.classList.toggle('rotate-90'); // 90 deg clockwise (right to down)
+    });
+});
+</script>

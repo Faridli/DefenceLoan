@@ -1,16 +1,17 @@
-{% extends "base.html" %}
+{% extends "user.html" %} 
+
+{% block left %}
+    {% include "loans/user_board.html " %} 
+{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto mt-12 px-4">
+<div class="max-w-lg mx-auto px-4">
 
     <!-- ================= Page Header ================= -->
     <div class="text-center mb-10">
         <h1 class="text-4xl font-extrabold text-emerald-700">
             Calculate your loan & submit your application
         </h1>
-        <p class="text-gray-500 mt-2">
-            Fill the details below to calculate and apply for your loan
-        </p>
     </div>
 
     {% if error %}
@@ -58,8 +59,8 @@
         </form>
 
         {% if monthly_installment %}
-        <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-5 text-center">
-            <div class="bg-emerald-50 p-5 rounded-2xl border-2 border-emerald-200">
+        <div class="mt-1 grid grid-cols-1 md:grid-cols-3 gap-5 text-center">
+            <div class="bg-emerald-50 p-4 rounded-2xl border-2 border-emerald-200">
                 <p class="text-sm text-gray-500">Total Interest</p>
                 <p class="text-2xl font-bold text-emerald-700">
                     {{ total_interest|floatformat:2 }} ৳
@@ -83,7 +84,7 @@
     <!-- ================= END STEP 1 ================= -->
 
     <!-- ================= STEP 2 : Applicant Information ================= -->
-    <div class="bg-white shadow-xl rounded-3xl p-8 border-4 border-blue-200 hover:border-blue-400 transition">
+    <div class="bg-white shadow-xl rounded-xl p-4 border-4 border-blue-200 hover:border-blue-400 transition">
         <div class="flex items-center gap-3 mb-6">
             <span class="bg-blue-600 text-white w-9 h-9 flex items-center justify-center rounded-full font-bold">
                 2

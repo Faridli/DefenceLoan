@@ -1,9 +1,14 @@
-{% extends 'base.html' %}
+{% extends 'base.html' %} 
+
+{% block sidebar %}
+    {% include "admin/board.html " %} 
+{% endblock %}
+
 {% block content %}
 
-<div class="max-w-4xl mx-auto p-4 bg-white shadow-md rounded-lg">
+<div class="max-w-lg mx-auto p-2 shadow-md rounded-lg">
     <div class="flex items-center justify-between mb-4">
-    <h2 class="text-2xl font-bold">User profile</h2>
+    <h2 class="text-2xl font-bold">Basic Information</h2>
 
     {% if user.live_photo %}
     <img src="{{ user.live_photo.url }}" alt="Live Photo" class="w-16 h-16 rounded-full border">
@@ -14,7 +19,6 @@
 
 
     <!-- Basic Information -->
-    <h3 class="text-xl font-semibold mt-4">Basic Information</h3>
     <ul class="list-disc pl-5">
         <li>Username: {{ user.username }}</li>
         <li>Full Name: {{ user.name }}</li>
@@ -23,6 +27,8 @@
         <li>Joining Date: {{ user.joining_date }}</li>
         <li>Birth Date: {{ user.birth_date }}</li>
         <li>Phone: {{ user.phone }}</li>
+        <li>Email: {{ user.email }}</li>
+        <li>Spouse: {{ user.spouse_name}}</li>
         <li>National ID Number: {{ user.national_id_number }}</li>
         <li>Service ID Number: {{ user.service_id_number }}</li>
     </ul>

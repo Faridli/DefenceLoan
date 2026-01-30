@@ -1,0 +1,50 @@
+<!-- ================= Navbar ================= -->
+<nav class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-lg site-header print-hide ">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+
+        <!-- Logo -->
+        <a href="#" class="text-4xl font-extrabold mb-6 flex items-center tracking-wide">
+            <span class="text-yellow-300 drop-shadow-md">L</span>
+            <span class="text-white">endora</span>
+        </a>
+
+   <!-- Menu -->
+        <div class="flex items-center space-x-6 text-sm">
+            {% if request.user.is_authenticated %}
+                <span class="bg-white/20 px-3 py-1 rounded-full">
+                    Hi, {{ request.user.username }}
+                </span>
+
+                <a href="#">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                         stroke-width="1.5" stroke="currentColor"
+                         class="w-8 h-8 text-yellow-400 hover:text-emerald-400 transition">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/>
+                    </svg>
+                </a>
+
+                <a href="{% url 'home' %}"
+                   class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-semibold transition">
+                    Logout
+                </a>
+                <!-- live photo
+                 {% if user.live_photo %}
+                    <img src="{{ user.live_photo.url }}" alt="Live Photo" class="w-16 h-16 rounded-full border">
+                    {% else %}
+                    <span class="text-gray-500">No Photo</span>
+                {% endif %}
+                    </div> -->
+
+            {% else %}
+                <a href="{% url 'logout_home' %}"
+                   class="bg-white text-blue-600 hover:bg-gray-100 px-4 py-2 rounded-lg font-semibold transition">
+                    Login
+                </a> 
+
+
+
+            {% endif %}
+        </div>
+    </div>
+</nav>

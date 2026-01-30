@@ -1,11 +1,14 @@
-{% extends "base.html" %}
-{% block content %}
+{% extends "base.html" %} 
 
-<h1 class="text-3xl font-bold mb-6 text-gray-800">All Loans</h1>
+{% block sidebar %}
+    {% include "admin/board.html " %} 
+{% endblock %}
+
+{% block content %}
 
 <div class="overflow-x-auto">
     <table class="min-w-full bg-white shadow-lg rounded-lg overflow-hidden">
-        <thead class="bg-gray-100">
+        <thead class="bg-white">
             <tr>
                 <th class="py-3 px-6 text-left text-gray-600 font-medium uppercase tracking-wider">ID</th>
                 <th class="py-3 px-6 text-left text-gray-600 font-medium uppercase tracking-wider">User</th>
@@ -45,3 +48,5 @@
 </div>
 
 {% endblock %}
+
+

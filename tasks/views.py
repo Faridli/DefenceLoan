@@ -487,31 +487,45 @@ def loan_detail(request, loan_id):
 @user_passes_test(lambda u: u.is_superuser, login_url='no-permission')
 @user_passes_test(lambda u: u.is_superuser, login_url='no-permission')
 def all_loans(request):
-
-    if request.method == 'POST':
-        loan_id = request.POST.get('loan_id')
-        status = request.POST.get('status')
-
-        loan = get_object_or_404(LoanApplication, id=loan_id)
-
-        # 🔒 Fully paid হলে status change করা যাবে না
-        if loan.display_status == 'Cleared':
-            # যদি লোন already cleared, কিছু change হবে না
-            return redirect('all_loan')
-
-        # 🔒 Approved হলে Cleared না হওয়া পর্যন্ত status change হবে না
-        if loan.status == 'Approved' and loan.display_status != 'Cleared':
-            return redirect('all_loan')
-
-        # ✅ অন্য সব ক্ষেত্রে status update করা যাবে
-        loan.status = status
-        loan.save()
-
-        return redirect('all_loan')
-
     loans = LoanApplication.objects.select_related('user').all().order_by('-id')
     return render(request, 'admin/all_loans.html', {'loans': loans})
 
+@user_passes_test(lambda u: u.is_superuser, login_url='no-permission')
+def loan_details(request, loan_id):
+
+    loan = get_object_or_404(LoanApplication, id=loan_id)
+
+    if request.method == 'POST':
+        status = request.POST.get('status')
+
+        # 🔒 Cleared হলে আর change না
+        if loan.display_status == 'Cleared':
+            return redirect('loan_details', loan_id=loan.id)
+
+        # 🔒 Approved হলে Cleared না হওয়া পর্যন্ত change না
+        if loan.status == 'Approved' and loan.display_status != 'Cleared':
+            return redirect('loan_details', loan_id=loan.id)
+
+        loan.status = status
+        loan.save()
+
+        return redirect('loan_details', loan_id=loan.id)
+
+    return render(request, 'admin/loan_details.html', {'loan': loan})
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def save_comment(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        loan_id = data.get("loan_id")
+        comment = data.get("comment")
+
+        loan = LoanApplication.objects.get(id=loan_id)
+        loan.comment = comment
+        loan.save()
+
+        return JsonResponse({"status": "saved"})
 
 @user_passes_test(lambda u: u.is_superuser, login_url='no-permission')
 def assign_role(request, user_id):
@@ -573,7 +587,7 @@ def user_profile(request, user_id):
 
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
-# @login_required
+@login_required
 def create_auto_debit(request):
     if request.method == "POST":
         amount = request.POST.get("amount")
@@ -595,14 +609,14 @@ def create_auto_debit(request):
         )
 
         messages.success(request, "Auto-Debit সফলভাবে চালু হয়েছে")
-        return redirect("auto_debit_list")
+        return redirect("auto_debit_create")
 
     return render(request, "auto_debit/auto_debit_form.html")
 
 # ==============================
 # Auto-Debit List
 # ==============================
-# @login_required
+@user_passes_test(lambda u: u.is_superuser, login_url='no-permission')
 def auto_debit_list(request):
     auto_debits = AutoDebit.objects.filter(user=request.user)
     return render(

@@ -1,7 +1,12 @@
-{% extends "base.html" %}
+{% extends "base.html" %} 
+
+{% block sidebar %}
+    {% include "admin/board.html " %} 
+{% endblock %}
+
 {% block content %}
-<div class="max-w-3xl mx-auto mt-10">
-    <h2 class="text-2xl font-semibold mb-4">My Auto-Debits</h2>
+<div class="max-w-3xl mx-auto ">
+    
     <table class="w-full border-collapse border">
         <thead>
             <tr class="bg-gray-100">
@@ -37,7 +42,7 @@
 
                 <td class="border px-4 py-2">
                     {% if debit.is_active %}
-                    <a href="{% url 'cancel_auto_debit' debit.id %}" class="text-green-500 text-center hover:underline">Back</a>
+                    <a href="#" class="text-green-500 text-center hover:underline">Back</a>
                     {% endif %}
                 </td>
             </tr>

@@ -1,15 +1,18 @@
-{% extends "base.html" %}
+{% extends "base.html" %} 
+
+{% block sidebar %}
+    {% include "admin/board.html " %} 
+{% endblock %}
+
 {% block content %}
 
-<h1 class="text-3xl font-bold mb-6 text-gray-800">All Groups</h1>
-
-<div class="overflow-x-auto bg-white shadow-lg rounded-lg">
-    <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-100">
-            <tr>
-                <th class="px-6 py-3 text-left text-gray-600 font-medium uppercase tracking-wider">ID</th>
-                <th class="px-6 py-3 text-left text-gray-600 font-medium uppercase tracking-wider">Group Name</th>
-                <th class="px-6 py-3 text-left text-gray-600 font-medium uppercase tracking-wider">Permissions</th>
+<div class="overflow-x-auto shadow-lg rounded-lg">
+    <table class="max-w-lg divide-y divide-green-300">
+        <thead>
+            <tr class="bg-sky-300">
+                <th class="px-6 py-3 text-left font-md text-sky-400">ID</th>
+                <th class="px-6 py-3 text-left font-md text-sky-400">Group Name</th>
+                <th class="px-6 py-3 text-left font-md text-sky-400">Permissions</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">

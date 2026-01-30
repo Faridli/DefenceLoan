@@ -1,7 +1,12 @@
-{% extends "base.html" %}
+{% extends "user.html" %} 
+
+{% block left %}
+    {% include "loans/user_board.html " %} 
+{% endblock %}
+
 {% block content %}
 
-<div class="min-h-screen bg-gray-100 py-10">
+<div class="min-h-screen bg-gray-100 py-0">
     <div class="max-w-3xl mx-auto bg-white shadow-lg rounded-xl p-8">
 
         <h2 class="text-3xl font-bold text-center text-indigo-600 mb-6">

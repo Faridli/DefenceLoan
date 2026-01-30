@@ -1,4 +1,8 @@
-{% extends "base.html" %}
+{% extends "user.html" %} 
+
+{% block left %}
+    {% include "loans/user_board.html " %} 
+{% endblock %}
 {% block title %}Payment Error{% endblock %}
 
 {% block content %}

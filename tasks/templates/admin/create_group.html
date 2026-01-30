@@ -1,9 +1,13 @@
-{% extends "base.html" %}
+{% extends "base.html" %} 
+
+{% block sidebar %}
+    {% include "admin/board.html " %} 
+{% endblock %}
+
 {% block content %}
 
-<div class="max-w-2xl mx-auto mt-10 p-8 bg-white shadow-xl rounded-2xl">
-    <h1 class="text-3xl font-bold text-gray-900 mb-8 text-center">Create New Group</h1>
-
+<div class="max-w-2xl mx-auto p-6 shadow-xl rounded-2xl">
+    
     {% if messages %}
         {% for message in messages %}
             <div class="mb-4 px-4 py-2 rounded-lg bg-green-100 text-green-800 font-medium">
@@ -12,7 +16,7 @@
         {% endfor %}
     {% endif %}
 
-    <form method="POST" class="space-y-6">
+    <form method="POST">
         {% csrf_token %}
 
         <!-- Group Name -->

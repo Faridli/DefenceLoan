@@ -1,7 +1,7 @@
 {% extends "homebase.html" %}
 {% block content %}
 
-<div class="max-w-4xl mx-auto p-6">
+<div class="max-w-lg mx-auto p-6">
 
     <!-- Loan Calculator -->
     <div class="bg-white shadow-lg rounded-2xl p-6">
@@ -30,7 +30,7 @@
         </form>
 
         {% if monthly_installment %}
-        <div class="mt-6 bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
+        <div class="mt-1 bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
             <p><span class="font-semibold text-gray-800">Total Interest:</span> {{ total_interest|floatformat:2 }} ৳</p>
             <p><span class="font-semibold text-gray-800">Total Payable:</span> {{ total_payable|floatformat:2 }} ৳</p>
             <p><span class="font-semibold text-gray-800">Monthly Installment:</span> {{ monthly_installment|floatformat:2 }} ৳</p>
