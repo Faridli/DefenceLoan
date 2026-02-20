@@ -16,14 +16,17 @@
                 <button type="button"
                         class="menu-btn w-full text-gray-500 text-left px-3 py-2 rounded hover:bg-gray-800 flex items-center gap-2">
                     <span class="arrow transition-transform duration-200">&gt;</span>
-                    <span>Apply for Loan</span>
+                    <span>Loan Management</span>
                 </button>
 
                 <!-- Submenu overlay -->
                 <div class="submenu absolute left-full top-0 ml-1 w-48 bg-gray-800 p-2 rounded shadow hidden z-10">
                     <a href="{% url 'profile_form' %}" class="block px-3 py-1 rounded text-gray-500 hover:bg-gray-700">&gt;Apply now</a>
                     <a href="{% url 'interest_rate' %}" class="block px-3 py-1 rounded text-gray-500 hover:bg-gray-700">&gt; Calculate Loan</a>
-                    <a href="{% url 'auto_debit_create' %}" class="block px-3 py-1 rounded text-gray-500 hover:bg-gray-700">&gt;Auto-Debit Setup</a>
+                    <a href="{% url 'auto_list' %}" class="block px-3 py-1 rounded text-gray-500 hover:bg-gray-700">&gt;Auto-Debit Setup</a>
+                    <a href="#" class="block px-3 py-1 rounded text-gray-500 hover:bg-gray-700">&gt;Auto-Debit Setup</a>
+                   
+                    <a href="{% url 'dashboard_user' %}" class="block px-3 py-1 rounded text-gray-500 hover:bg-gray-700">&gt;Loan History</a>
                     <a href="#" class="block px-3 py-1 rounded text-gray-500 hover:bg-gray-700">&gt;Credit loan</a>
                 </div>
             </div>

@@ -144,7 +144,7 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
-FRONTEND_URL = 'http://127.0.0.1:8000' 
+ 
 
 # 'https://loan.render'
 
@@ -152,6 +152,21 @@ FRONTEND_URL = 'http://127.0.0.1:8000'
 SSLCOMMERZ_STORE_ID = config('SSLCOMMERZ_STORE_ID')
 SSLCOMMERZ_STORE_PASS = config('SSLCOMMERZ_STORE_PASS')
 SSLCOMMERZ_URL = config('SSLCOMMERZ_URL')
+
+
+
+# settings.py
+
+# Development / localhost
+FRONTEND_URL = 'http://127.0.0.1:8000'
+SSLCOMMERZ_URL = config('SSLCOMMERZ_URL')  # অথবা যেটা তোমার payment gateway URL
+
+# Production (যখন deploy করবে)
+# BASE_URL = "https://yourdomain.com"
+
+
+
+
 
 
 

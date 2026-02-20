@@ -21,7 +21,7 @@ from django.db import transaction
 from django.core.exceptions import ValidationError
 
 from .models import (
-    LoanApplication, LoanAdmin, OTPVerification, UserDevice, UserVerification, InterestRate,AutoDebit
+    LoanApplication, LoanAdmin, OTPVerification, UserDevice, UserVerification, InterestRate,AutoDebit, 
 )
 from .forms import UserRegisterForm, UserProfileForm, UserKycForm, AssignRoleForm, CreateGroupForm
 
@@ -585,38 +585,190 @@ def user_profile(request, user_id):
     return render(request, 'admin/user_profile.html', context)
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from datetime import date
+from django.conf import settings
+import requests
+
+# -----------------------------
+# User Loan List
+# -----------------------------
+# @login_required
+def auto_list(request):
+    # loans = LoanApplication.objects.filter(user=request.user)
+    loans = LoanApplication.objects.filter(user=request.user).order_by('-id')
+    return render(request, "loans/user_auto_list.html", {"loans": loans})
+
+
+# -----------------------------
+# Auto-Debit Create / Form
+# -----------------------------
+# @login_required
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from datetime import date
+from django.conf import settings
+import requests
+from tasks.models import LoanApplication, AutoDebit
+
 @login_required
-def create_auto_debit(request):
+def create_auto_debit(request, loan_id):
+    # --------------------------
+    # Loan check
+    # --------------------------
+    try:
+        loan = LoanApplication.objects.get(id=loan_id, user=request.user)
+    except LoanApplication.DoesNotExist:
+        messages.error(request, "এই লোনটি আপনার অ্যাকাউন্টে নেই।")
+        return redirect("auto_list")  # বা যেখান থেকে loans দেখানো হয়
+
     if request.method == "POST":
         amount = request.POST.get("amount")
         months = request.POST.get("months")
         agree = request.POST.get("agree")
 
         if not agree:
-            messages.error(request, "সম্মতি ছাড়া Auto-Debit চালু করা যাবে না")
-            return redirect("auto_debit_create")
+            messages.error(request, "সম্মতি ছাড়া Auto-Deb চালু করা যাবে না")
+            return redirect("auto_debit_create", loan_id=loan_id)
 
-        AutoDebit.objects.create(
+        # --------------------------
+        # Payment Gateway Initialization
+        # --------------------------
+        payload = {
+            "customer_name": request.user.username,
+            "customer_email": request.user.email,
+            "amount": float(amount),
+            "currency": "BDT",
+            "recurring": True,
+            "frequency": "monthly",
+            "duration_months": months,
+            "return_url": f"{settings.FRONTEND_URL}/tasks/auto_debit/callback/?loan_id={loan.id}"
+        }
+
+        try:
+            res = requests.post(f"{settings.SSLCOMMERZ_URL}/subscription/init", json=payload)
+            res_data = res.json()
+        except Exception as e:
+            messages.error(request, f"Gateway connection failed: {e}")
+            return redirect("auto_debit_create", loan_id=loan_id)
+
+        if res_data.get("status") != "SUCCESS":
+            messages.error(request, "Payment Gateway initialization failed")
+            return redirect("auto_debit_create", loan_id=loan_id)
+
+        # --------------------------
+        # Save AutoDebit temporarily
+        # --------------------------
+        auto = AutoDebit.objects.create(
             user=request.user,
+            loan=loan,
             amount=amount,
             months=months,
             start_date=date.today(),
             next_payment_date=date.today(),
-            is_active=True,
-            gateway_reference="TEMP_REF_123"  # gateway success হলে real ref
+            is_active=False,
+            gateway_reference=res_data.get("subscription_id")
         )
 
-        messages.success(request, "Auto-Debit সফলভাবে চালু হয়েছে")
-        return redirect("auto_debit_create")
+        # --------------------------
+        # Redirect to Payment Gateway
+        # --------------------------
+        gateway_payment_url = res_data.get("payment_url")
+        return redirect(gateway_payment_url)
 
-    return render(request, "auto_debit/auto_debit_form.html")
+    # --------------------------
+    # GET: Show Form
+    # --------------------------
+    return render(
+        request,
+        "auto_debit/auto_debit_form.html",
+        {"loan": loan, "today": date.today()}
+    )
 
-# ==============================
+# -----------------------------
+# Gateway Callback
+# -----------------------------
+# @login_required
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+
+def auto_debit_callback(request):
+    loan_id = request.POST.get("loan_id")
+    subscription_id = request.POST.get("subscription_id")
+    card_token = request.POST.get("card_token")
+    status = request.POST.get("status")
+
+    if not loan_id or not subscription_id:
+        messages.error(request, "Invalid callback data")
+        return redirect("auto_list")
+
+    loan = get_object_or_404(LoanApplication, pk=loan_id)
+    auto = AutoDebit.objects.filter(loan=loan, gateway_reference=subscription_id).first()
+
+    if not auto:
+        messages.error(request, "Auto-Debit subscription not found")
+        return redirect("auto_list")
+
+    if status == "SUCCESS":
+        auto.is_active = True
+        auto.card_token = card_token
+        auto.save()
+        messages.success(request, "Auto-Debit সফলভাবে সক্রিয় হয়েছে")
+    else:
+        messages.error(request, "Auto-Debit subscription ব্যর্থ হয়েছে")
+
+    return redirect("auto_list")
+
+
+
+# def auto_debit_callback(request, loan_id):
+#     subscription_id = request.POST.get("subscription_id")
+#     card_token = request.POST.get("card_token")
+#     status = request.POST.get("status")
+
+#     loan = get_object_or_404(LoanApplication, pk=loan_id)
+#     auto = AutoDebit.objects.filter(loan=loan, gateway_reference=subscription_id).first()
+
+#     if not auto:
+#         messages.error(request, "Auto-Debit subscription not found")
+#         return redirect("auto_list")
+
+#     if status == "SUCCESS":
+#         auto.is_active = True
+#         auto.card_token = card_token
+#         auto.save()
+#         messages.success(request, "Auto-Debit সফলভাবে সক্রিয় হয়েছে")
+#     else:
+#         messages.error(request, "Auto-Debit subscription ব্যর্থ হয়েছে")
+
+#     return redirect("auto_list")
+
+# -----------------------------
 # Auto-Debit List
-# ==============================
-@user_passes_test(lambda u: u.is_superuser, login_url='no-permission')
+# -----------------------------
+# @login_required
 def auto_debit_list(request):
     auto_debits = AutoDebit.objects.filter(user=request.user)
     return render(
@@ -625,19 +777,15 @@ def auto_debit_list(request):
         {"auto_debits": auto_debits}
     )
 
-# ==============================
-# Cancel Auto-Debit
-# ==============================
-import requests
-from django.conf import settings
-from django.contrib import messages
-from django.shortcuts import redirect, get_object_or_404
 
+# -----------------------------
+# Cancel Auto-Debit
+# -----------------------------
 # @login_required
 def cancel_auto_debit(request, debit_id):
     if request.method != "POST":
         messages.error(request, "Invalid request")
-        return redirect("dashboard_user")
+        return redirect("auto_debit_list")
 
     debit = get_object_or_404(
         AutoDebit,
@@ -646,21 +794,17 @@ def cancel_auto_debit(request, debit_id):
         is_active=True
     )
 
-    cancel_url = f"{settings.SSLCOMMERZ_URL}/validator/api/merchantTransIDvalidationAPI.php"
+    cancel_url = f"{settings.GATEWAY_URL}/subscription/cancel"
 
     payload = {
-        "store_id": settings.SSLCOMMERZ_STORE_ID,
-        "store_passwd": settings.SSLCOMMERZ_STORE_PASS,
-        "reference_no": debit.gateway_reference,
-        "action": "cancel",
-        "format": "json",
+        "subscription_id": debit.gateway_reference,
     }
 
     try:
-        response = requests.post(cancel_url, data=payload, timeout=15)
+        response = requests.post(cancel_url, json=payload, timeout=15)
         result = response.json()
 
-        if result.get("APIConnect") == "DONE" and result.get("status") == "SUCCESS":
+        if result.get("status") == "SUCCESS":
             debit.is_active = False
             debit.save(update_fields=["is_active"])
             messages.success(request, "Auto-Debit সফলভাবে বন্ধ হয়েছে ✅")

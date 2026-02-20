@@ -63,9 +63,15 @@ urlpatterns = [
 
     path('save-location/', views.save_location), 
 
-    path("auto-debit/create/", views.create_auto_debit, name="auto_debit_create"),
-    path("auto-debit/list/", views.auto_debit_list, name="auto_debit_list"),
-    path("auto-debit/<int:debit_id>/cancel/", views.cancel_auto_debit, name="cancel_auto_debit"),
+    path('auto_debit/create/<int:loan_id>/', views.create_auto_debit, name='auto_debit_create'),
+    path('auto/', views.auto_list, name='auto_list'),
+    path('auto_debit/callback/', views.auto_debit_callback, name='auto_debit_callback'),
+    # path('auto_debit/callback/<int:loan_id>/', views.auto_debit_callback, name='auto_debit_callback'),
+
+
+    path('auto-debit/list/', views.auto_debit_list, name='auto_debit_list'),
+    path('auto-debit/<int:debit_id>/cancel/', views.cancel_auto_debit, name='cancel_auto_debit'),
+
 
 ]
  

@@ -1,57 +1,29 @@
-{% extends "base.html" %} 
+{% extends "user.html" %}
 
-{% block sidebar %}
-    {% include "admin/board.html " %} 
+{% block left %}
+    {% include "loans/user_board.html" %}
 {% endblock %}
 
 {% block content %}
-<div class="max-w-3xl mx-auto ">
-    
-    <table class="w-full border-collapse border">
-        <thead>
-            <tr class="bg-gray-100">
-                <th class="border px-4 py-2">Amount (৳)</th>
-                <th class="border px-4 py-2">Start Date</th>
-                <th class="border px-4 py-2">Next Payment Date</th>
-                <th class="border px-4 py-2">Months</th>
-                <th class="border px-4 py-2">Status</th>
-                <th class="border px-4 py-2">Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for debit in auto_debits %}
-            <tr>
-                <td class="border px-4 py-2">{{ debit.amount }}</td>
-                <td class="border px-4 py-2">{{ debit.start_date }}</td>
-                <td class="border px-4 py-2">{{ debit.next_payment_date }}</td>
-                <td class="border px-4 py-2">{{ debit.months }}</td>
-                <td class="border px-4 py-2">
-                    {% if debit.is_active %}
-                    <form method="post" action="{% url 'cancel_auto_debit' debit.id %}">
-                        {% csrf_token %}
-                        <button
-                            type="submit"
-                            class="text-red-600 hover:underline"
-                            onclick="return confirm('আপনি কি নিশ্চিত Auto-Debit বন্ধ করতে চান?')"
-                        >
-                            Cancel
-                        </button>
-                    </form>
-                    {% endif %}
-                </td>
+<h2 class="text-xl font-semibold mb-4">My Auto-Debits</h2>
 
-                <td class="border px-4 py-2">
-                    {% if debit.is_active %}
-                    <a href="#" class="text-green-500 text-center hover:underline">Back</a>
-                    {% endif %}
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="6" class="text-center py-4">No Auto-Debits found.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+{% for auto in loans %}
+    <div class="mb-4 p-4 bg-gray-50 border border-gray-200 rounded">
+        <p><strong>Loan #{{ auto.loan.id }}</strong></p>
+        <p>Amount: {{ auto.amount }} BDT</p>
+        <p>Months: {{ auto.months }}</p>
+        <p>Status: {% if auto.is_active %}Active ✅{% else %}Inactive ❌{% endif %}</p>
+
+        {% if auto.is_active %}
+        <form method="post" action="{% url 'cancel_auto_debit' auto.id %}" class="mt-2">
+            {% csrf_token %}
+            <button type="submit" class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">
+                Cancel Auto-Debit
+            </button>
+        </form>
+        {% endif %}
+    </div>
+{% empty %}
+    <p>No Auto-Debits found.</p>
+{% endfor %}
 {% endblock %}

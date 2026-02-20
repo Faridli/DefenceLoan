@@ -329,6 +329,10 @@ class LoanApplication(models.Model):
     # Decimal দিয়ে safe division এবং integer conversion
         return int(self.total_paid // self.monthly_installment)
 
+    @property
+    def remaining_months(self):
+       return self.duration_months - self.months_paid
+
 
     @property
     def display_status(self):
@@ -407,13 +411,23 @@ from django.utils import timezone
 from datetime import date
 
 User = get_user_model() 
+# class AutoDebit(models.Model):
+#     user = models.ForeignKey(User, on_delete=models.CASCADE)
+#     amount = models.DecimalField(max_digits=10, decimal_places=2)
+#     start_date = models.DateField(default=timezone.now)
+#     cancelled_at = models.DateTimeField(null=True, blank=True)
+#     months = models.PositiveIntegerField()
+#     next_payment_date = models.DateField()
+#     is_active = models.BooleanField(default=True)
+#     gateway_reference = models.CharField(max_length=255)
+#     next_payment_date = models.DateField(default=date.today)
 class AutoDebit(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    loan = models.ForeignKey('LoanApplication', on_delete=models.CASCADE)  # এটা অবশ্যই থাকতে হবে
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    start_date = models.DateField(default=timezone.now)
-    cancelled_at = models.DateTimeField(null=True, blank=True)
     months = models.PositiveIntegerField()
+    start_date = models.DateField()
     next_payment_date = models.DateField()
-    is_active = models.BooleanField(default=True)
-    gateway_reference = models.CharField(max_length=255)
-    next_payment_date = models.DateField(default=date.today)
+    is_active = models.BooleanField(default=False)
+    gateway_reference = models.CharField(max_length=255, blank=True, null=True)
+    card_token = models.CharField(max_length=255, blank=True, null=True)

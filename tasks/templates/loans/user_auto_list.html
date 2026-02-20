@@ -1,0 +1,30 @@
+    {% extends "user.html" %}
+
+    {% block left %}
+        {% include "loans/user_board.html" %}
+    {% endblock %}
+
+    {% block content %}
+    <h2 class="text-2xl font-bold mb-6">My Loans</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    {% for loan in loans %}
+        <div class="p-4 bg-white border border-gray-200 rounded shadow hover:shadow-md transition">
+            <p class="font-semibold text-lg mb-2">Loan #{{ loan.id }}</p>
+            <p>Installment amount: <span class="font-medium">{{ loan.amount}} BDT</span></p>
+            <p>total Pay: <span class="font-medium">{{ loan.total_payable}} BDT</span></p>
+            <p>Monthly Installment: <span class="font-medium">{{ loan.monthly_installment}} BDT</span></p>
+            <p>total Duration: <span class="font-medium">{{ loan.duration_months }} months</span></p>
+            <p>auto pay Duration:<span class="font-medium">{{ loan.remaining_months }} months</span></p>
+
+
+            <a href="{% url 'auto_debit_create' loan.id %}"
+                class="inline-block mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition">
+                Auto-Debit চালু করুন
+            </a>    
+        </div>
+    {% empty %}
+        <p class="text-gray-500">No loans found.</p>
+    {% endfor %}
+    </div>
+    {% endblock %}
